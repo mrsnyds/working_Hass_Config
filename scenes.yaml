@@ -1,0 +1,140 @@
+- id: '1609241910884'
+  name: Hangout
+  entities:
+    light.great_room_main_lights:
+      supported_color_modes:
+      - brightness
+      device_id: '34'
+      zone_id: '23'
+      friendly_name: Great Rm Ceiling
+      supported_features: 32
+      state: 'off'
+    light.great_room_floor_lamp:
+      supported_color_modes:
+      - brightness
+      device_id: '8'
+      zone_id: '4'
+      friendly_name: Great Floor Lamp
+      supported_features: 32
+      color_mode: brightness
+      brightness: 86
+      state: 'on'
+    light.great_room_table_lamp:
+      supported_color_modes:
+      - brightness
+      device_id: '50'
+      zone_id: '34'
+      friendly_name: Great Tbl Lamp
+      supported_features: 32
+      color_mode: brightness
+      brightness: 163
+      state: 'on'
+    light.kitchen_under_cabinet:
+      supported_color_modes:
+      - brightness
+      color_mode: brightness
+      brightness: 86
+      device_id: '28'
+      zone_id: '19'
+      friendly_name: Kitch Under Cabinet
+      supported_features: 32
+      state: 'on'
+    light.kitchen_above_cabinet:
+      supported_color_modes:
+      - brightness
+      device_id: '27'
+      zone_id: '18'
+      friendly_name: Kitch Above Cabinet
+      supported_features: 32
+      state: 'off'
+    light.kitchen_island_lights:
+      supported_color_modes:
+      - brightness
+      device_id: '29'
+      zone_id: '20'
+      friendly_name: Kitch Island
+      supported_features: 32
+      state: 'off'
+    light.kitchen_main_lights:
+      supported_color_modes:
+      - brightness
+      device_id: '24'
+      zone_id: '17'
+      friendly_name: Kitch Ceiling
+      supported_features: 32
+      state: 'off'
+    light.kitchen_sink_pendants:
+      supported_color_modes:
+      - brightness
+      device_id: '10'
+      zone_id: '6'
+      friendly_name: Kitch Sink
+      supported_features: 32
+      state: 'off'
+    light.dining_room_chandelier:
+      supported_color_modes:
+      - brightness
+      device_id: '23'
+      zone_id: '16'
+      friendly_name: Dining Room
+      supported_features: 32
+      state: 'off'
+  metadata:
+    light.great_room_floor_lamp:
+      entity_only: false
+    light.kitchen_sink_pendants:
+      entity_only: false
+    light.dining_room_chandelier:
+      entity_only: false
+    light.kitchen_main_lights:
+      entity_only: false
+    light.kitchen_above_cabinet:
+      entity_only: false
+    light.kitchen_under_cabinet:
+      entity_only: false
+    light.kitchen_island_lights:
+      entity_only: false
+    light.great_room_main_lights:
+      entity_only: false
+    light.great_room_table_lamp:
+      entity_only: false
+- id: '1670636111100'
+  name: Kitchen Cooking
+  entities:
+    light.kitchen_main_lights:
+      supported_color_modes:
+      - brightness
+      friendly_name: Kitch Ceiling
+      supported_features: 32
+      device_id: '24'
+      zone_id: '17'
+      color_mode: brightness
+      brightness: 140
+      state: 'on'
+    light.kitchen_under_cabinet:
+      supported_color_modes:
+      - brightness
+      friendly_name: Kitch Under Cabinet
+      supported_features: 32
+      device_id: '28'
+      zone_id: '19'
+      color_mode: brightness
+      brightness: 255
+      state: 'on'
+    light.kitchen_island_lights:
+      supported_color_modes:
+      - brightness
+      friendly_name: Kitch Island
+      supported_features: 32
+      device_id: '29'
+      zone_id: '20'
+      color_mode: brightness
+      brightness: 168
+      state: 'on'
+  metadata:
+    light.kitchen_main_lights:
+      entity_only: true
+    light.kitchen_under_cabinet:
+      entity_only: true
+    light.kitchen_island_lights:
+      entity_only: true

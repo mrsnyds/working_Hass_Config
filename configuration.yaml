@@ -1,0 +1,161 @@
+homeassistant:
+  customize: !include customize.yaml
+  # external_url: "https://mrsnyds.duckdns.org:8123/"
+  external_url: "https://6clg7gbxojz27abagj0ke0dbqc3o4wag.ui.nabu.casa"
+  
+default_config:
+
+# HTTP
+# http:
+  # base_url: !secret my_url 
+  # ssl_certificate: /ssl/fullchain.pem
+  # ssl_key: /ssl/privkey.pem    
+# Activate the configuration editor
+config:  
+# Configuration.yaml example
+scene: !include scenes.yaml  
+# Configure a default setup of Home Assistant (frontend, api, etc)
+
+# Sun component
+sun:
+# Python
+python_script:
+
+# Logger
+logger:
+  default: info
+  # logs:
+    # custom_components.wyzesense: debug
+    # wyzesense.gateway: debug
+    # locationsharinglib: debug 
+    # life360: debug    
+    
+frontend:
+  themes: !include_dir_merge_named themes
+  extra_module_url:
+    - /hacsfiles/lovelace-card-mod/card-mod.js  
+
+
+# Wake on LAN 
+wake_on_lan:
+    
+# =============================
+# Integrations with !include 
+automation: !include automations.yaml
+script: !include scripts.yaml
+group: !include groups.yaml
+device_tracker: !include device_tracker.yaml
+switch: !include switches.yaml
+sensor: !include sensors.yaml
+binary_sensor: !include binary_sensors.yaml
+notify: !include notifiers.yaml 
+rest: !include rest.yaml  
+template: !include template.yaml
+
+# ===============================   
+# Text to speech
+tts:
+  - platform: google_translate
+    base_url: https://mrsnyds.duckdns.org:8123 
+ 
+## Amazon AWS Components
+aws:
+  credentials:
+    - name: my_aws_account
+      aws_access_key_id: !secret aws_key_id
+      aws_secret_access_key: !secret aws_secret_key
+  notify:
+   # use the first credential defined in aws component by default
+    - name: aws_lambda_1
+      aws_access_key_id: !secret aws_key_id
+      aws_secret_access_key: !secret aws_secret_key
+      service: lambda
+      region_name: us-west-2
+# Todoist
+calendar:
+  - platform: todoist
+    token: !secret todoist_api
+      
+lutron_caseta:
+  host: 192.168.1.106
+  keyfile: /ssl/lutron/caseta.key
+  certfile: /ssl/lutron/caseta.crt
+  ca_certs: /ssl/lutron/caseta-bridge.crt 
+  
+
+# lutron_caseta_pro:
+    # bridges:
+      # - host: 192.168.1.106
+        # mac: e8:eB:11:df:cc:5d  
+        # default_transition_seconds: 1.0
+        # Note: Configure only switches, shades, and fans, all others will be dimmers
+        # The numbers below are examples.  Must read the integration report JSON for actual ID ranges
+        # switch: [ 4, 5 ]
+        # cover: [ 11, 12 ]
+        # fan: [ 15 ]
+
+# IFTTT        
+ifttt:
+  key:
+    key_frank: !secret ifttt_key_frank
+    key_kathy: !secret ifttt_key_kathy
+    
+
+#CONVERSATION
+conversation:
+  
+  
+# INTENT script integration
+# dialogflow:
+
+intent_script:
+  Temperature:
+    speech:
+      text: >-
+        The temperature is currently {{ states('sensor.openweathermap_temperature') }} degrees,
+        and the sea at Harvey Cedars will have         
+        {% set tide_calc =
+         ((strptime(([now().year,((now()|string)[:7])[-2:],((now()|string)[:10])[-2:],
+         (states("sensor.loveladies_harbor")[-8:]
+         |trim)]|join()), "%Y%m%d%I:%M %p")|as_timestamp) - 12000)
+         |float|timestamp_custom("%I:%M %p") %}
+        {{states("sensor.loveladies_harbor")[0:12]}} {{tide_calc}}       
+        
+  LocateIntent:
+    speech:
+      text: >
+        {%- for state in states.device_tracker -%}
+          {%- if state.name.lower() == User.lower() -%}
+            {{ state.name }} is at {{ state.state }}
+          {%- elif loop.last -%}
+            I am sorry, I do not know where {{ User }} is.
+          {%- endif -%}
+        {%- else -%}
+          Sorry, I don't have any trackers registered.
+        {%- endfor -%}
+  WhereAreWeIntent:
+    speech:
+      text: >
+        {%- if is_state('device_tracker.adri', 'home') and
+               is_state('device_tracker.bea', 'home') -%}
+          You are both home, you silly
+        {%- else -%}
+          Bea is at {{ states("device_tracker.bea") }}
+          and Adri is at {{ states("device_tracker.adri") }}
+        {% endif %}
+  # TurnLights:
+    # speech:
+      # text: Turning {{ Room }} lights {{ OnOff }}
+    # action:
+      # - service: notify.pushbullet
+        # data:
+          # message: Someone asked via apiai to turn {{ Room }} lights {{ OnOff }}
+      # - service: >
+          # {%- if OnOff == "on" -%}
+            # switch.turn_on
+          # {%- else -%}
+            # switch.turn_off
+          # {%- endif -%}
+        # data:
+          # entity_id: "switch.light_{{ Room | striptags | replace(' ', '_') }}"  
+         

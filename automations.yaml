@@ -1,0 +1,1639 @@
+- id: frank_desk_light
+  alias: Frank Desk Light and PC
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.frank_desk_wyze_motion
+  condition:
+  - condition: state
+    entity_id: binary_sensor.frank_desk_motion_hours
+    state: 'on'
+  - condition: state
+    entity_id: input_boolean.guest_mode
+    state: 'off'
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.to_state.state  == ''on'' }}'
+      sequence:
+      - service: light.turn_on
+        target:
+          entity_id: light.frank_desk_lamp
+        data: {}
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ states(''light.upstairs_main_lights'') == ''off''
+              }}'
+          sequence:
+          - service: light.turn_on
+            target:
+              entity_id: light.upstairs_main_lights
+            data:
+              brightness: 68
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.to_state.state  == ''off'' }}'
+      sequence:
+      - delay: 00:00:10
+      - service: light.turn_off
+        target:
+          entity_id: light.frank_desk_lamp
+        data: {}
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ state_attr(''light.upstairs_main_lights'',''brightness'')
+              == 68 }}'
+          sequence:
+          - service: light.turn_off
+            target:
+              entity_id: light.upstairs_main_lights
+            data: {}
+  mode: restart
+- id: porch_fans_off
+  alias: Turn off porch fans
+  trigger:
+  - platform: state
+    entity_id:
+    - switch.back_porch_ceiling_fan
+    to: 'on'
+    for:
+      hours: 1
+      minutes: 30
+      seconds: 0
+    id: switch.back_porch_ceiling_fan
+  - platform: state
+    entity_id:
+    - switch.front_porch_ceiling_fan
+    to: 'on'
+    for:
+      hours: 1
+      minutes: 30
+      seconds: 0
+    id: switch.front_porch_ceiling_fan
+  action:
+  - service: switch.turn_off
+    target:
+      entity_id: '{{ trigger.id }}'
+- id: vanity_left_on
+  alias: Turn off Vanity Lights
+  trigger:
+  - platform: state
+    entity_id: binary_sensor.bathroom_area_motion
+    to: 'off'
+    for: 00:03:30
+  action:
+  - choose:
+    - conditions: "{{ is_state('binary_sensor.4_in_1_sensor_home_security_motion_detection','off')
+        \ \n  and is_state('binary_sensor.4_in_1_sensor_home_security_motion_detection','off')\n}}"
+      sequence:
+      - service: light.turn_off
+        target:
+          entity_id: light.master_bathroom_vanity_lights
+        data: {}
+  mode: single
+- id: christmas_lights_off
+  alias: Christmas Lights Off
+  initial_state: 'on'
+  trigger:
+  - platform: time
+    at: input_datetime.christmas_lights_off
+  condition:
+  - condition: state
+    entity_id: input_boolean.christmas_lighting_active
+    state: 'on'
+  action:
+  - service: light.turn_off
+    target:
+      entity_id: light.christmas_lights, light.back_porch_mantle
+- id: christmas_lights_on
+  alias: Christmas Lights On
+  trigger:
+  - platform: time
+    at: input_datetime.christmas_lights_on
+  condition:
+  - condition: state
+    entity_id: input_boolean.christmas_lighting_active
+    state: 'on'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.christmas_lights
+    data: {}
+  initial_state: 'on'
+- id: shower_light_on_and_fan
+  alias: Shower Light on Triggers Fan
+  trigger:
+  - platform: state
+    entity_id:
+    - light.master_bathroom_shower_lights
+    to: 'on'
+    id: '1'
+    alias: Shower Light changes to on - turn on fan
+  - platform: state
+    entity_id:
+    - switch.master_bathroom_exhaust_fan
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 5
+    id: '2'
+    alias: Shower Fan on for 1 minute - check motion
+  - platform: state
+    entity_id:
+    - switch.master_bathroom_exhaust_fan
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
+    id: '3'
+    alias: Shower Fan on for 10 minutes - check if fan needed (humidity)
+  - entity_id: light.master_bathroom_shower_lights
+    platform: state
+    to: 'on'
+    for: 00:30:00
+    id: '4'
+    alias: Shower Light on for 30 minutes - turn light off
+  action:
+  - variables:
+      light_on: '{{ ((now()|as_timestamp) -  (states.light.master_bathroom_shower_lights.last_changed|as_timestamp))|int
+        }} '
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: '1'
+        alias: (1) Light just came on - turn on fan
+      sequence:
+      - service: switch.turn_on
+        data:
+          entity_id: switch.master_bathroom_exhaust_fan
+      - service: logbook.log
+        data:
+          name: Fan on by light
+          entity_id: sensor.zooz_zse40_4_in_1_sensor_relative_humidity
+          message: 'Light was on for {{ light_on //60 }} minutes and {{ light_on %
+            60 }} seconds.     '
+    - conditions:
+      - condition: trigger
+        id: '2'
+        alias: (2) Light on 1 minute - fan off if no motion
+      sequence:
+      - if:
+        - condition: state
+          entity_id: binary_sensor.4_in_1_sensor_home_security_motion_detection
+          state: 'off'
+        then:
+        - service: switch.turn_off
+          data: {}
+          target:
+            entity_id: switch.master_bathroom_exhaust_fan
+    - conditions:
+      - condition: trigger
+        id: '3'
+        alias: (3) Light on 10 minutes - turn off fan if no humidity
+      sequence:
+      - if:
+        - condition: state
+          entity_id: input_boolean.humidity_spike
+          state: 'off'
+        then:
+        - variables:
+            fan_on_minutes: "{{ ((((now()|as_timestamp) - \n  (states.switch.master_bathroom_exhaust_fan.last_changed|as_timestamp))|int)/60)|int
+              }}"
+        - service: switch.turn_off
+          data:
+            entity_id: switch.master_bathroom_exhaust_fan
+        - service: logbook.log
+          data:
+            name: Fan Not Needed
+            entity_id: sensor.zooz_zse40_4_in_1_sensor_relative_humidity
+            message: 'Fan turned on by light, but there is no humidity. Fan on for
+              {{fan_on_minutes}} minutes. '
+    - conditions:
+      - condition: trigger
+        id: '4'
+        alias: (4) Light on for 30 minutes - turn it off
+      sequence:
+      - service: light.turn_off
+        data:
+          entity_id: light.master_bathroom_shower_lights
+  mode: parallel
+- id: guest_room_nightstands
+  alias: Guest Room Nightstands
+  trigger:
+  - platform: state
+    entity_id: light.guest_bedroom_main_lights
+    to: 'on'
+  - platform: state
+    entity_id: light.guest_bedroom_main_lights
+    to: 'off'
+  action:
+  - service: "{% if trigger.from_state.state == trigger.to_state.state %}\n  homeassistant.update_entity\n{%
+      else %}\n  light.turn_{{states(\"light.guest_bedroom_main_lights\")}}\n{% endif
+      %}      \n"
+    target:
+      entity_id: light.right_night_stand, light.left_night_stand
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{states(''light.guest_bedroom_main_lights'') == ''on''}}'
+      sequence:
+      - delay: 00:00:02
+      - service: light.turn_on
+        target:
+          entity_id: light.guest_bedroom_main_lights
+        data:
+          brightness_pct: 5
+- id: evening_hangout
+  alias: Great Room Evening Hangout
+  initial_state: 'on'
+  trigger:
+  - event: sunset
+    offset: 00:20:00
+    platform: sun
+  condition:
+  - condition: state
+    entity_id: group.home
+    state: home
+  - condition: template
+    value_template: '{{is_state(''light.great_room'', ''on'')}}'
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ states (''light.great_room_main_lights'') == ''on'' }}'
+      sequence:
+      - service: script.turn_on
+        target:
+          entity_id: script.light_fader
+        data:
+          variables:
+            light: light.great_room_main_lights
+            transition: 00:55:00
+            end_level_pct: 0
+  - service: script.turn_on
+    target:
+      entity_id: script.light_fader
+    data:
+      variables:
+        light: light.great_room_floor_lamp
+        transition: 00:45:00
+        end_level_pct: 8
+  - service: script.turn_on
+    target:
+      entity_id: script.light_fader
+    data:
+      variables:
+        light: light.great_room_table_lamp
+        transition: 00:45:00
+        end_level_pct: 64
+- id: back_porch_fan_from_light
+  alias: Turn on porch fan by light
+  trigger:
+  - platform: template
+    value_template: '{{state_attr(''light.back_porch_mantle'',''brightness'') == 127}}'
+  action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.back_porch_ceiling_fan
+- id: indoor_sunset_lighting_trigger
+  alias: Indoor Sunset Lighting Trigger
+  initial_state: 'on'
+  trigger:
+  - platform: numeric_state
+    entity_id: sun.sun
+    value_template: '{{ state.attributes.elevation }}'
+    below: 12.0
+    above: 10.0
+  condition:
+  - condition: time
+    after: '12:00:00'
+    before: '23:59:00'
+  - condition: state
+    entity_id: group.home
+    state: home
+  action:
+  - service: script.turn_on
+    data: {}
+    target:
+      entity_id: script.indoor_sunset_lighting
+- id: dresser_light
+  alias: Dresser Light
+  trigger:
+  - platform: state
+    entity_id: light.master_bedroom_main_lights
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.to_state.state == ''on'' }}'
+      sequence:
+      - service: light.turn_on
+        data: {}
+        target:
+          entity_id: light.dresser_light
+    default:
+    - service: light.turn_off
+      data: {}
+      target:
+        entity_id: light.dresser_light
+  mode: parallel
+- id: all_gone_stuff_on
+  alias: Home - All Gone Stuff On
+  trigger:
+  - platform: state
+    entity_id: group.home
+    to: not_home
+    for:
+      hours: 0
+      minutes: 15
+      seconds: 0
+  action:
+  - service: script.turn_on
+    data:
+      entity_id: "{%- if (now().day == (as_timestamp(states.sun.sun.attributes.next_setting)|timestamp_custom(\"%d\")|int))\n
+        \   or (now().hour | int == 23) -%} \n  script.all_gone_not_random\n{%- else
+        -%}\n  script.all_gone_random \n{%- endif -%}"
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.turn_off_when_gone
+  initial_state: 'on'
+- id: random_lights_end
+  alias: Random Away Lights End
+  trigger:
+  - platform: time
+    at: '23:00:00'
+  condition:
+  - condition: state
+    entity_id: group.home
+    state: not_home
+  - condition: state
+    entity_id: input_boolean.guest_mode
+    state: 'off'
+  action:
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.master_bedroom_main_lights
+      - light.dining_room_chandelier
+      - light.upstairs_main_lights
+      - light.guest_bedroom_main_lights
+      - light.great_room_table_lamp
+      - light.great_room_floor_lamp
+      - light.kitchen_under_cabinet
+- id: someone_returns
+  alias: Home - Someone Returns
+  trigger:
+  - entity_id:
+    - group.home
+    platform: state
+    to: home
+  action:
+  - service: script.turn_on
+    target:
+      entity_id: script.indoor_sunset_lighting
+    data: {}
+  - service: script.turn_on
+    target:
+      entity_id: script.return_home_lighting
+    data: {}
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.indoor_ceiling_fans
+- id: climate_preset_control
+  alias: Control Climate Preset
+  trigger:
+    platform: state
+    entity_id: binary_sensor.set_away_climate
+  action:
+  - choose:
+      conditions: '{{ (trigger.to_state.state == ''on'') and (states(''input_boolean.guest_mode'')
+        == ''off'') }}'
+      sequence:
+      - service: climate.set_preset_mode
+        target:
+          entity_id:
+          - climate.downstairs
+          - climate.upstairs
+        data:
+          preset_mode: eco
+    default:
+    - service: climate.set_preset_mode
+      target:
+        entity_id:
+        - climate.downstairs
+        - climate.upstairs
+      data:
+        preset_mode: none
+- id: random_lights_begin
+  alias: Random Away Lights Begin
+  trigger:
+  - entity_id: group.home
+    platform: state
+    to: not_home
+  - event: sunset
+    offset: 00:00:00
+    platform: sun
+  condition:
+  - condition: state
+    entity_id: group.home
+    state: not_home
+  - condition: state
+    entity_id: input_boolean.guest_mode
+    state: 'off'
+  - condition: time
+    before: '22:59:00'
+  - condition: sun
+    after: sunset
+    after_offset: 00:00:00
+  action:
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.master_bedroom_main_lights
+      - light.dining_room_chandelier
+      - light.upstairs_main_lights
+      - light.guest_bedroom_main_lights
+      - light.great_room_table_lamp
+      - light.great_room_floor_lamp
+      - light.kitchen_under_cabinet
+  - service: script.turn_on
+    data: {}
+    target:
+      entity_id: script.random_lights_execute
+- id: epson_ink_email
+  alias: Epson Ink Notification Email
+  description: " When one of the EPSON 'sensor.inklevel ...' drops belows 10%, use
+    AWS lambda to send a notification email.\n An additional trigger is once a day
+    at 08:00:00; if a reminder sensor is \"on\", a reminder is sent.\n\nEither email
+    can be overidden by the \"sensor.<color>_ink_reminder_email\" sensor being \"off\":\n
+    \    - the state change email is blocked if the corresponding \"sensor.<color>_ink_reminder_email\"
+    set to \"off\"\n     - the daily email is blocked ONLY if ALL \"sensor.<color>_ink_reminder_email\"
+    sensors are \"off\" \n\nThe sensors are turned on if ink level < 10%  AND  the
+    input_boolean.<color>_ink_reminder == \"ON\"\nThe sensor will stay \"off\", even
+    if ink < 10%, if corresponding input_boolean.<color>_ink_reminder is set to \"OFF\"\n\nIf
+    input_boolean.<color>_ink_reminder is set to \"OFF\", that ensures the \"sensor.<color>_ink_reminder_email\"
+    will be \"off\", even if ink < 10%.  This is useful when you already have a backup,
+    and want suppress reminders until you are down to your last cartridge.  \n\n A
+    separate automation will reset the input_boolean.<color>_ink_reminder to \"ON\"
+    when the level goes above 19%."
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.ink_level_black
+    below: 10
+  - platform: numeric_state
+    entity_id: sensor.ink_level_yellow
+    below: 10
+  - platform: numeric_state
+    entity_id: sensor.ink_level_magenta
+    below: 10
+  - platform: numeric_state
+    entity_id: sensor.ink_level_cyan
+    below: 10
+  - platform: time
+    at: 08:00:00
+  condition:
+  - condition: template
+    value_template: "{%- if trigger.platform == 'time' -%}\n  {{'on' in [(states(\"sensor.black_ink_reminder_email\")),\n
+      \ (states(\"sensor.yellow_ink_reminder_email\")),\n  (states(\"sensor.magenta_ink_reminder_email\")),\n
+      \ (states(\"sensor.cyan_ink_reminder_email\"))]}}\n{%- else -%}\n  {% set my_trigger
+      = (trigger.entity_id|replace('sensor.ink_level_', '')) %}\n  {% set my_condition
+      = (\"sensor.\" + my_trigger + \"_ink_reminder_email\") %}\n  {{states(my_condition)
+      == 'on'}}\n{%- endif -%}    "
+  action:
+  - data:
+      target: arn:aws:lambda:us-west-2:152624716237:function:mySendEmail
+      data:
+        black_level: '{{states(''sensor.ink_level_black'')|default(''0'',true)}}'
+        yellow_level: '{{states(''sensor.ink_level_yellow'')|default(''0'',true)}}'
+        magenta_level: '{{states(''sensor.ink_level_magenta'')|default(''0'',true)}}'
+        cyan_level: '{{states(''sensor.ink_level_cyan'')|default(''0'',true)}}'
+        sensor_trigger: "{%- if trigger.platform == 'numeric_state' -%}\n  {{trigger.entity_id|default('not
+          sure which?',true)}}\n{%- else -%}\n  'time'\n{%- endif -%}\n"
+      title: haha
+      message: send an email notification
+    service: notify.aws_lambda_1
+  initial_state: 'on'
+- id: epson_ink_reminder_reset
+  alias: Epson Ink Reminder Reset
+  description: 'When one of the EPSON cartridges is changed, and state is > 10, reset
+    email reminders.
+
+    This handles the case where the ''input_boolean.<color>_ink_reminder'' was set
+    to ''Off''.'
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.ink_level_black
+    above: 9
+  - platform: numeric_state
+    entity_id: sensor.ink_level_yellow
+    above: 9
+  - platform: numeric_state
+    entity_id: sensor.ink_level_magenta
+    above: 9
+  - platform: numeric_state
+    entity_id: sensor.ink_level_cyan
+    above: 9
+  action:
+  - data:
+      entity_id: "{%- if 'black' in trigger.entity_id-%}\n  input_boolean.black_ink_reminder\n{%-
+        elif 'yellow' in trigger.entity_id-%}\n  input_boolean.yellow_ink_reminder\n{%-
+        elif 'magenta' in trigger.entity_id-%}\n  input_boolean.magenta_ink_reminder\n{%-
+        else -%}\n  input_boolean.cyan_ink_reminder\n{%- endif -%}\n"
+    service: input_boolean.turn_on
+  initial_state: 'on'
+- id: '1646482799712'
+  alias: Fibaro The Button Green (Z-Wave JS)
+  description: ''
+  use_blueprint:
+    path: gsemet/zwave-js-fibaro-the-button-fgpb-101-v2021-12-08.yaml
+    input:
+      fibaro_thebutton: fac62c7800ace4eeaf0176a1e3212851
+      key_pressed_1x:
+      - service: light.toggle
+        data:
+          color_temp: 199
+          brightness_pct: 83
+        target:
+          entity_id: light.frank_desk_lamp
+      key_pressed_2x:
+      - service: light.toggle
+        data: {}
+        target:
+          entity_id: light.upstairs
+- id: '1646483383370'
+  alias: Fibaro The Button White (Z-Wave JS)
+  description: ''
+  use_blueprint:
+    path: gsemet/zwave-js-fibaro-the-button-fgpb-101-v2021-12-08.yaml
+    input:
+      fibaro_thebutton: dd1d9d5513d8d9b7cf2efcc70db6202e
+      key_pressed_1x:
+      - service: script.turn_on
+        target:
+          entity_id: script.going_to_bed
+        data:
+          variables:
+            button_presses: single
+            master: 20
+            vanity: 10
+      key_pressed_2x:
+      - service: script.turn_on
+        target:
+          entity_id: script.going_to_bed
+        data:
+          variables:
+            button_presses: double
+            master: 6
+            vanity: 3
+      key_held_down:
+      - service: scene.turn_on
+        data:
+          transition: 15
+        target:
+          entity_id: scene.hangout
+- id: aws_iot_button_selector
+  alias: iOT Button Selector
+  description: Reads button serial number, and type of click, from JSON payload and
+    passess to corresponding script
+  trigger:
+  - platform: webhook
+    webhook_id: 9CAA2BA12E56F242D34B3BEC199396E9F4EC7751DF5F5EDE85DF75C482AWS1
+  action:
+  - service: script.turn_on
+    target:
+      entity_id: script.aws_button_{{trigger.json.button_id}}
+    data:
+      variables:
+        click_type: '{{trigger.json.click_type}}'
+  initial_state: 'on'
+- id: phone_battery_low
+  alias: Phone Battery Low
+  description: Send notifications to our phones when one of our batteries is low
+  trigger:
+  - platform: numeric_state
+    entity_id:
+    - sensor.frank_pixel_battery_level
+    - sensor.kathy_pixel_battery_level
+    below: 16
+  - platform: numeric_state
+    entity_id:
+    - sensor.frank_pixel_battery_level
+    - sensor.kathy_pixel_battery_level
+    below: 9
+  condition:
+  - condition: template
+    value_template: '{{  is_state(entity2,''discharging'')  }}'
+  action:
+  - service: notify.kathy_and_frank_pixels
+    data:
+      title: '{{phone}} {{title_warning}}'
+      message: "{% if battery_level|int < 9 %}        \n  FIND A CHARGER FAST! {{phone[:5]}}'s
+        battery only has {{battery_level}}% left!\n{% else %}       \n  {{phone[:5]}}'s
+        phone is down to {{battery_level}}%. Time for a charge ...      \n{% endif
+        %}"
+      data:
+        tag: '{{ message_tag }}'
+  - service: input_boolean.turn_on
+    data: {}
+    target:
+      entity_id: '{{charge_toggle}}'
+  initial_state: true
+  variables:
+    entity: '{{trigger.entity_id}}'
+    entity2: ' {{ entity[:19] + ''battery_state'' }} '
+    battery_level: '{{states(entity)}}'
+    phone: "{% if 'frank' in entity %}\n Frank's Pixel\n{% else %}\n Kathy's Pixel\n{%
+      endif %}   "
+    charge_toggle: "{% if 'frank' in entity %}\n input_boolean.frank_needs_charge\n{%
+      else %}\n input_boolean.kathy_needs_charge\n{% endif %}    "
+    title_warning: "{% if battery_level|int < 9 %}\n VERY Low Battery\n{% else %}\n
+      Low Battery\n{% endif %}"
+    message_tag: "{% if 'frank' in entity %}\n frank phone low\n{% else %}\n kathy
+      phone low\n{% endif %} "
+- id: lower_shade_with_sun
+  alias: Lower Shade With Sun
+  description: Lowers shade in increments, based on angle of setting sun
+  trigger:
+  - platform: numeric_state
+    entity_id: sun.sun
+    value_template: '{{ state.attributes.elevation }}'
+    below: 45.0
+    above: 43.0
+  condition:
+  - condition: time
+    after: '12:00:00'
+    before: '23:59:00'
+  action:
+  - choose:
+    - conditions: '{{ state_attr(''sun.sun'',''elevation'') > 43 }}'
+      sequence:
+      - service: cover.stop_cover
+        entity_id: cover.kitchen_shade
+    - conditions: '{{ state_attr(''sun.sun'',''elevation'') < 43 and state_attr(''sun.sun'',''elevation'')
+        > 10}}'
+      sequence:
+      - service: cover.close_cover
+        target:
+          entity_id: cover.kitchen_shade
+      - delay: 00:00:03
+      - service: cover.stop_cover
+        target:
+          entity_id: cover.kitchen_shade
+    - conditions: '{{ state_attr(''sun.sun'',''elevation'') < 22 }}'
+      sequence:
+      - service: cover.close_cover
+        target:
+          entity_id: cover.kitchen_shade
+      - delay: 00:00:03
+      - service: cover.stop_cover
+        entity_id: cover.kitchen_shade
+- id: one_locks_the_other
+  alias: One Lock Locks the Other
+  initial_state: true
+  trigger:
+  - platform: state
+    entity_id: lock.schlage_back_door
+    to: locked
+  - platform: state
+    entity_id: lock.august_front_door
+    to: locked
+  action:
+  - variables:
+      other_lock: "{%  if trigger.entity_id == \"lock.schlage_back_door\" %}\n  lock.august_front_door\n{%
+        \ else %}\n  lock.schlage_back_door\n{%  endif %}"
+  - choose:
+      conditions: '{{ states( other_lock ) != ''locked'' }}'
+      sequence:
+      - service: lock.lock
+        target:
+          entity_id: '{{ other_lock }}'
+- id: phone_alarm
+  alias: Phone Alarm
+  description: This automation will set the wake up alarm based on state changes in
+    the phone's next alarm sensor
+  trigger:
+  - platform: state
+    entity_id: sensor.frank_pixel_next_alarm
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{trigger.to_state.state == ''unavailable'' }}'
+      sequence:
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.wake_up_alarm_set
+    - conditions:
+      - condition: template
+        value_template: '{{reset != ''300'' }}'
+      sequence:
+      - service: input_datetime.set_datetime
+        data:
+          entity_id: input_datetime.wake_up_alarm_time
+          timestamp: '{{states(''sensor.frank_pixel_next_alarm'')|as_timestamp}}'
+      - service: input_boolean.turn_on
+        data:
+          entity_id: input_boolean.wake_up_alarm_set
+  initial_state: true
+  mode: parallel
+  variables:
+    reset: "{% if trigger.to_state.state == 'unavailable' or \n       trigger.from_state.state
+      == 'unavailable'%}\n   0\n{% else %}\n  {{ ((trigger.to_state.state|as_timestamp)
+      \n     - (trigger.from_state.state|as_timestamp))| int }}\n{% endif %}"
+- id: sony_input_boolean
+  alias: Update Input Boolean For Sony TV State
+  trigger:
+  - entity_id: binary_sensor.sony_ping
+    platform: state
+  mode: restart
+  action:
+  - data:
+      entity_id: input_boolean.sony_tv_helper
+    service: "{% if trigger.to_state.state == 'on' %}\n  input_boolean.turn_on\n{%
+      else %}\n  input_boolean.turn_off\n{% endif %}          "
+- id: sony_on_dim_lights
+  alias: Dim Ceiling when SONY on
+  trigger:
+  - platform: device
+    device_id: a5ba945bd4ff6db3bf924226ac7b4bc8
+    domain: media_player
+    entity_id: media_player.sony_bravia_tv
+    type: playing
+  condition:
+  - condition: template
+    value_template: '{{ states (''light.great_room_main_lights'') == ''on'' }}'
+  action:
+  - service: light.turn_off
+    data:
+      transition: 30
+    target:
+      entity_id: light.great_room_main_lights
+- id: sunrise
+  alias: Sunrise Routine
+  trigger:
+    platform: numeric_state
+    entity_id: sun.sun
+    value_template: '{{ state.attributes.elevation }}'
+    above: -4.0
+    below: -2.0
+  condition:
+    condition: time
+    after: 00:00:00
+    before: '12:00:00'
+  action:
+  - service: light.turn_off
+    target:
+      entity_id: light.sunset_exterior, light.stairs_main_lights
+  - service: cover.stop_cover
+    target:
+      entity_id: cover.kitchen_shade
+  - delay: 00:00:12
+  - service: cover.open_cover
+    target:
+      entity_id: cover.kitchen_shade
+- id: sunset
+  alias: Sunset Routine
+  trigger:
+  - platform: numeric_state
+    entity_id: sun.sun
+    value_template: '{{ state.attributes.elevation }}'
+    below: -2
+    above: -4
+  condition:
+  - condition: time
+    after: '12:00:00'
+    before: '23:59:00'
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.front_porch
+    data:
+      transition: 290
+      brightness: 22
+  - service: light.turn_on
+    target:
+      entity_id: light.back_porch_sconces
+    data:
+      brightness_pct: 10
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ is_state(''input_boolean.christmas_lighting_active'',
+          ''on'') }}'
+      sequence:
+      - service: light.turn_on
+        target:
+          entity_id: light.christmas_lights
+        data: {}
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{  is_state(''input_boolean.enable_evening_shade_close'',''on'')
+          }}'
+      sequence:
+      - service: cover.stop_cover
+        target:
+          entity_id: cover.kitchen_shade
+        data: {}
+      - delay: 00:00:12
+      - service: cover.close_cover
+        target:
+          entity_id: cover.kitchen_shade
+        data: {}
+  - delay: 04:30
+  - service: light.turn_off
+    entity_id: light.stairs_main_lights
+  - service: script.turn_on
+    data:
+      entity_id: script.light_fader
+      variables:
+        light: light.front_porch
+        transition: 01:00:00
+        end_level_pct: 9
+  - service: script.turn_on
+    data:
+      entity_id: script.light_fader
+      variables:
+        light: light.back_porch_sconces
+        transition: 00:30:00
+        end_level_pct: 1
+- id: theme_change
+  alias: Theme Change with Sun
+  trigger:
+    platform: state
+    entity_id: sun.sun
+  action:
+  - service: frontend.set_theme
+    data:
+      name: "{% if states(\"sun.sun\") == \"above_horizon\" %}\n  Google Light Theme\n{%
+        else %}\n  Google Dark Theme\n{% endif %}"
+- id: wake_up_alarm
+  alias: Wake Up Alarm
+  description: 'This automation will do some action when the current time matches
+    the time set for input_datetime.wake_up_alarm_time.  A condition for this automation
+    is the input_boolean.wake_up_alarm_set is "on".
+
+    Another automation will set the time, and turn on the boolean, when the state
+    of the next_alarm sensor changes.'
+  trigger:
+  - platform: time
+    at: input_datetime.wake_up_alarm_time
+  condition:
+  - condition: state
+    entity_id: input_boolean.wake_up_alarm_set
+    state: 'on'
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ states(''person.frank_snyder'') == ''home'' }}'
+      sequence:
+      - service: input_boolean.turn_off
+        data:
+          entity_id: input_boolean.wake_up_alarm_set
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ alarm_type == ''overnight_sleep''}}'
+          sequence:
+          - service: script.turn_on
+            data:
+              entity_id: script.get_out_of_bed
+  initial_state: true
+  variables:
+    alarm_type: "{% if now().hour < 10 %}\n   overnight_sleep\n{% else %}\n  nap\n{%
+      endif %}    "
+- id: wyzesense_bathroom_vanity_motion
+  alias: Wyze Motion Controls Bathroom Vanity
+  trigger:
+  - entity_id: binary_sensor.master_vanity_wyze_motion
+    platform: state
+    to: 'on'
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{  is_state('light.master_bathroom_vanity_lights','off')
+          \n     and states('binary_sensor.master_bed_closet_motion_hours') == 'on'}}"
+      sequence:
+      - service: light.turn_on
+        target:
+          entity_id: light.master_bathroom_vanity_lights
+        data: {}
+    - conditions:
+      - condition: template
+        value_template: "{{  is_state('light.master_bathroom_vanity_lights','off')
+          \n     and states('binary_sensor.master_bed_closet_motion_hours') == 'off'\n
+          \    and now().hour > 12}}"
+      sequence:
+      - service: light.turn_on
+        target:
+          entity_id: light.master_bathroom_vanity_lights
+        data:
+          brightness_pct: 5
+  mode: single
+- id: zooz_shower_motion
+  alias: Shower Motion Controls Shower Light
+  description: ''
+  trigger:
+  - entity_id: binary_sensor.4_in_1_sensor_home_security_motion_detection
+    platform: state
+  action:
+  - variables:
+      light_on: '{{ ((now()|as_timestamp) -  (states.light.master_bathroom_shower_lights.last_changed|as_timestamp))|int
+        }} '
+  - choose:
+    - conditions: '{{ (is_state(''binary_sensor.4_in_1_sensor_home_security_motion_detection'',''on''))
+        and (now().hour not in [23,0,1,2,3,4])}}'
+      sequence:
+      - service: light.turn_on
+        data:
+          entity_id: light.master_bathroom_shower_lights
+    - conditions: '{{ (is_state(''binary_sensor.4_in_1_sensor_home_security_motion_detection'',''off''))
+        and (light_on > 48) }}'
+      sequence:
+      - delay: 00:00:50
+      - choose:
+        - conditions: '{{ is_state(''binary_sensor.4_in_1_sensor_home_security_motion_detection'',''off'')
+            }}'
+          sequence:
+          - service: light.turn_off
+            data:
+              entity_id: light.master_bathroom_shower_lights
+    - conditions: '{{ (is_state(''binary_sensor.4_in_1_sensor_home_security_motion_detection'',''off''))
+        and (light_on < 48) }}   '
+      sequence:
+      - service: light.turn_off
+        data:
+          entity_id: light.master_bathroom_shower_lights
+  mode: restart
+- id: sensor_battery_warning
+  alias: Sensor Battery Warning
+  description: '  This automation sends a notification when a battery level drops
+    below 21%. Additional triggers for any sensor with "battery_level" can be added,
+    and will work with the  templated notification.'
+  trigger:
+  - platform: numeric_state
+    entity_id: zwave.zooz_zse40_4_in_1_sensor_2
+    value_template: '{{ state_attr(''zwave.zooz_zse40_4_in_1_sensor_2'',''battery_level'')
+      }}'
+    above: 16
+    below: 21
+  - platform: numeric_state
+    entity_id: zwave.fibaro_green_system_fgpb101_button
+    value_template: '{{state_attr(''zwave.fibaro_green_system_fgpb101_button'',''battery_level'')}}'
+    above: 16
+    below: 21
+  - platform: numeric_state
+    entity_id: zwave.fibaro_white_system_fgpb101_button
+    value_template: '{{state_attr(''zwave.fibaro_white_system_fgpb101_button'',''battery_level'')}}'
+    above: 16
+    below: 21
+  - platform: numeric_state
+    entity_id: zwave.schlage_allegion_be469zp_connect_smart_deadbolt
+    value_template: '{{state_attr(''zwave.schlage_allegion_be469zp_connect_smart_deadbolt'',''battery_level'')}}'
+    above: 16
+    below: 21
+  - platform: numeric_state
+    entity_id: zwave.zooz_zse29_outdoor_motion_sensor_1
+    value_template: '{{state_attr(''zwave.zooz_zse29_outdoor_motion_sensor_1'',''battery_level'')}}'
+    above: 16
+    below: 21
+  - platform: numeric_state
+    entity_id: zwave.zooz_zse40_4_in_1_sensor_2
+    value_template: '{{state_attr(''zwave.zooz_zse29_outdoor_motion_sensor_2'',''battery_level'')}}'
+    above: 16
+    below: 21
+  - platform: numeric_state
+    entity_id: binary_sensor.wyzesense_779b2dd4
+    value_template: '{{state_attr(''binary_sensor.wyzesense_779b2dd4'',''battery_level'')}}'
+    above: 16
+    below: 21
+  - platform: numeric_state
+    entity_id: binary_sensor.wyzesense_779b241a
+    value_template: '{{state_attr(''binary_sensor.wyzesense_779b241a'',''battery_level'')}}'
+    above: 16
+    below: 21
+  - platform: numeric_state
+    entity_id: binary_sensor.wyzesense_778792dd
+    value_template: '{{state_attr(''binary_sensor.wyzesense_778792dd'',''battery_level'')}}'
+    above: 16
+    below: 21
+  - platform: numeric_state
+    entity_id: binary_sensor.wyzesense_779d4ba0
+    value_template: '{{state_attr(''binary_sensor.wyzesense_779d4ba0'',''battery_level'')}}'
+    above: 16
+    below: 21
+  - platform: numeric_state
+    entity_id: binary_sensor.wyzesense_778798e9
+    value_template: '{{state_attr(''binary_sensor.wyzesense_778798e9'',''battery_level'')}}'
+    above: 16
+    below: 21
+  - platform: numeric_state
+    entity_id: sensor.front_door_battery
+    value_template: '{{state_attr(''sensor.front_door_battery'',''battery_level'')}}'
+    above: 16
+    below: 21
+  action:
+  - service: notify.mobile_app_frank_pixel
+    data:
+      title: '{% set entity = trigger.entity_id %} {% set friendly = state_attr(entity,''friendly_name'')
+        %}       {% set battery = state_attr(entity,''battery_level'') %}  Sensor
+        Battery Warning: {{battery}}%'
+      message: '{% set entity = trigger.entity_id %} {% set friendly = state_attr(entity,''friendly_name'')
+        %}       {% set battery = state_attr(entity,''battery_level'') %}  The {{friendly}}
+        battery level is {{battery}}          '
+  initial_state: true
+- id: wyzesense_bedroom_closet_motion
+  alias: Wyze Motion Controls Master Closet Light
+  description: ''
+  trigger:
+  - entity_id: binary_sensor.closet_motion
+    platform: state
+  - entity_id: light.master_closet_lights
+    platform: state
+    to: 'on'
+    for: 00:30:00
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ (trigger.to_state.state == 'on') and \n   (trigger.entity_id
+          == 'binary_sensor.closet_motion') and\n   (states('light.master_closet_lights')
+          != 'on' ) \n   and states('binary_sensor.master_bed_closet_motion_hours')
+          == 'on'}} "
+      sequence:
+      - service: light.turn_on
+        target:
+          entity_id: light.master_closet_lights
+        data: {}
+      - delay: 00:00:10
+    - conditions:
+      - condition: template
+        value_template: "{{ (trigger.to_state.state == 'on') and \n   (trigger.entity_id
+          == 'binary_sensor.closet_motion') and\n   (states('light.master_closet_lights')
+          != 'on' ) \n   and states('binary_sensor.master_bed_closet_motion_hours')
+          == 'off'\n   and now().hour > 12 }} "
+      sequence:
+      - service: light.turn_on
+        target:
+          entity_id: light.master_closet_lights
+        data:
+          brightness_pct: 5
+      - delay: 00:00:10
+    - conditions:
+      - condition: template
+        value_template: "{{ (trigger.entity_id == 'light.master_closet_lights') and
+          \n   (states.binary_sensor.closet_motion.state == 'off') }}"
+      sequence:
+      - service: light.turn_off
+        data:
+          entity_id: light.master_closet_lights
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.to_state.state == ''off'' }}'
+      sequence:
+      - service: light.turn_off
+        data:
+          entity_id: light.master_closet_lights
+  mode: single
+- id: zooz_humidity_controls_shower
+  alias: Control Shower Fan for Humidity
+  trigger:
+  - platform: state
+    entity_id: sensor.zooz_zse40_4_in_1_sensor_relative_humidity
+    id: '1'
+  - platform: state
+    entity_id: switch.master_bathroom_exhaust_fan
+    to: 'on'
+    for: 00:60:00
+    id: '2'
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{{ (trigger.from_state.state != 'unavailable') and \n   (trigger.entity_id
+          == 'sensor.zooz_zse40_4_in_1_sensor_relative_humidity') and \n   (((trigger.to_state.state|int)
+          - (trigger.from_state.state|int))> 3) }}       "
+        alias: Humidity increased by 3% or more
+      sequence:
+      - service: logbook.log
+        data:
+          name: Humidity Spike
+          entity_id: input_boolean.humidity_spike
+          message: 'Humidity spike from {{trigger.from_state.state}}% to {{trigger.to_state.state}}%                '
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.humidity_spike
+        data: {}
+      - service: switch.turn_on
+        target:
+          entity_id: switch.master_bathroom_exhaust_fan
+        data: {}
+      - delay: 00:05:00
+      - repeat:
+          while:
+          - condition: template
+            value_template: "{{  ((states('sensor.zooz_zse40_4_in_1_sensor_relative_humidity')|int)
+              > 65)\n   and (states('switch.master_bathroom_exhaust_fan') == 'on')}}"
+          sequence:
+          - delay: 00:01:00
+      - variables:
+          fan_on_minutes: "{{ ((((now()|as_timestamp) - \n (states.switch.master_bathroom_exhaust_fan.last_changed|as_timestamp))|int)/60)|int
+            }}                  "
+      - service: switch.turn_off
+        target:
+          entity_id: switch.master_bathroom_exhaust_fan
+        data: {}
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.humidity_spike
+        data: {}
+      - service: logbook.log
+        data:
+          name: Humidity Target Reached
+          entity_id: input_boolean.humidity_spike
+          message: Humidity exhaust fan off (humidity below target). Fan on for {{fan_on_minutes}}
+            minutes.
+    - conditions:
+      - condition: trigger
+        id: '2'
+        alias: (2) Fan on for 60 minutes - turn off
+      sequence:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.master_bathroom_exhaust_fan
+        data: {}
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.humidity_spike
+        data: {}
+      - service: logbook.log
+        data:
+          name: Fan Ran 60 Minutes
+          entity_id: input_boolean.humidity_spike
+          message: Humidity exhaust fan off (exceeded 60 minutes)
+  initial_state: 'on'
+  mode: parallel
+- id: zooz_carport
+  alias: Zooz Motion Controls Carport Light
+  trigger:
+  - entity_id: binary_sensor.carport_zooz_motion
+    platform: state
+  - entity_id: light.carport
+    platform: state
+    to: 'on'
+    for: 00:30:00
+  action:
+  - choose:
+    - conditions: "{{ (trigger.entity_id == 'light.carport') and \n   (states('binary_sensor.carport_zooz_motion')
+        == 'off') }}"
+      sequence:
+      - service: light.turn_off
+        data:
+          entity_id: light.carport
+    - conditions: "{{ (trigger.to_state.state == 'on') and (trigger.entity_id == 'binary_sensor.carport_zooz_motion')
+        and\n   (states('light.carport') != 'on' ) and (state_attr('sun.sun','elevation')
+        < 2) }}  "
+      sequence:
+      - service: light.turn_on
+        data:
+          entity_id: light.carport
+          brightness_pct: 50
+    - conditions: '{{ trigger.to_state.state == ''off'' }}'
+      sequence:
+      - service: light.turn_off
+        data:
+          entity_id: light.carport
+  mode: restart
+- id: '1651765198079'
+  alias: Calendar - Guest Mode On/Off
+  description: 'Automation is triggered if the words "Guest Mode" (not case sensitive)
+    are in the calendar entry "message" (title).   If the "description" contains the
+    word "on", it will turn guest mode on, otherwise, it will turn guest mode off, '
+  trigger:
+  - platform: calendar
+    event: start
+    entity_id: calendar.frank_snyder_nbt
+  condition:
+  - condition: template
+    value_template: '{{states.calendar.frank_snyder_nbt.attributes.message|regex_search(''guest
+      mode'', ''ignorecase'')}}'
+  action:
+  - target:
+      entity_id: input_boolean.guest_mode
+    service: "{% if states.calendar.frank_snyder_nbt.attributes.description|regex_search('on',
+      'ignorecase') %}\n  input_boolean.turn_on\n{%- else -%}\n  input_boolean.turn_off\n{%-
+      endif %} \n"
+  mode: single
+  initial_state: 'on'
+- id: '1652711416215'
+  alias: Phone Battery Charging
+  description: When the battery was low, but now the phone is on the charger, update
+    the low battery notification to indicate that it is now charging
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.frank_pixel_battery_state
+    - sensor.kathy_pixel_battery_state
+    from: discharging
+    to: charging
+  condition:
+  - condition: template
+    value_template: '{{ states(charge_toggle) == ''on'' }} '
+  action:
+  - service: notify.kathy_and_frank_pixels
+    data:
+      title: '{{title_charging}}'
+      message: '{{phone}} battery was low, but it is now on the charger.  Battery
+        is beginning to charge from {{battery_level}}%.'
+      data:
+        tag: '{{ message_tag }}'
+  - service: input_boolean.turn_off
+    data: {}
+    target:
+      entity_id: '{{charge_toggle}}'
+  - delay:
+      hours: 0
+      minutes: 15
+      seconds: 0
+      milliseconds: 0
+  - alias: Update battery level
+    variables:
+      battery_level: '{{states(entity2)}}'
+  - service: notify.kathy_and_frank_pixels
+    data:
+      title: '{{title_charging}}'
+      message: '{{phone}} has been re-charging for a few minutes, and battery is now
+        charged to {{battery_level}}%.'
+      data:
+        tag: '{{ message_tag }}'
+  mode: parallel
+  initial_state: true
+  variables:
+    entity: '{{trigger.entity_id}}'
+    entity2: ' {{ entity[:19] + ''battery_level'' }} '
+    battery_level: '{{states(entity2)}}'
+    phone: "{% if 'frank' in entity %}\n Frank's Pixel\n{% else %}\n Kathy's Pixel\n{%
+      endif %}   "
+    charge_toggle: "{% if 'frank' in entity %}\n input_boolean.frank_needs_charge\n{%
+      else %}\n input_boolean.kathy_needs_charge\n{% endif %}  "
+    title_charging: '{{phone}} is now charging'
+    message_tag: "{% if 'frank' in entity %}\n frank phone low\n{% else %}\n kathy
+      phone low\n{% endif %} "
+- id: '1655120325807'
+  alias: Overnight Front Porch Dimmer
+  description: ''
+  trigger:
+  - platform: time
+    at: 01:00:00
+  condition: []
+  action:
+  - service: light.turn_on
+    data:
+      transition: 60
+      brightness: 14
+    target:
+      entity_id: light.front_porch
+  mode: single
+- id: '1667506938287'
+  alias: Turn off TV if on by Accident
+  description: The TV is magically coming on by itself.  This automation will catch
+    it and turn it off ... until I figure out how it is coming on.  It might have
+    been the DNLA integration, which I just deleted
+  trigger:
+  - platform: state
+    entity_id:
+    - media_player.sony_bravia_tv
+    to: playing
+    for:
+      hours: 0
+      minutes: 30
+      seconds: 0
+  condition:
+  - condition: and
+    conditions:
+    - condition: state
+      entity_id: input_boolean.guest_mode
+      state: 'off'
+    - condition: state
+      entity_id: group.home
+      state: not_home
+    alias: Nobody is home and guest mode is off
+  action:
+  - service: media_player.turn_off
+    data: {}
+    target:
+      entity_id: media_player.sony_bravia_tv
+  mode: single
+- id: '1667677241722'
+  alias: Test JSON Airport Zone
+  description: ''
+  trigger:
+  - platform: zone
+    entity_id:
+    - person.kathy_snyder
+    - person.frank_snyder
+    zone: zone.charleston_international_airport
+    id: CHS
+  - platform: zone
+    entity_id:
+    - person.kathy_snyder
+    - person.frank_snyder
+    zone: zone.boston_logan_international_airport
+    id: BOS
+  - platform: zone
+    entity_id:
+    - person.kathy_snyder
+    - person.frank_snyder
+    zone: zone.newark_international_airport
+    id: EWR
+  - platform: zone
+    entity_id:
+    - person.kathy_snyder
+    - person.frank_snyder
+    zone: zone.charlotte_douglas_international_airport
+    id: CLT
+  - platform: zone
+    entity_id:
+    - person.kathy_snyder
+    - person.frank_snyder
+    zone: zone.philadelphia_international_airport
+    id: PHL
+  - platform: zone
+    entity_id:
+    - person.kathy_snyder
+    - person.frank_snyder
+    zone: zone.savannah_hilton_head_international_airport
+    id: SAV
+  - platform: zone
+    entity_id:
+    - person.kathy_snyder
+    - person.frank_snyder
+    zone: zone.providence_pvd_international_airport
+    id: PVD
+  - platform: zone
+    entity_id:
+    - person.kathy_snyder
+    - person.frank_snyder
+    zone: zone.lvi_international_airport
+    id: LVI
+  - platform: zone
+    entity_id:
+    - person.kathy_snyder
+    - person.frank_snyder
+    zone: zone.dallas_love_field_dal
+    id: DAL
+  - platform: zone
+    entity_id:
+    - person.kathy_snyder
+    - person.frank_snyder
+    zone: zone.william_p_hobby_airport_hou
+    id: HOU
+  condition: []
+  action:
+  - variables:
+      notification: "{% if trigger.entity_id == 'person.frank_snyder' %}\n  {\n    \"message_tag\":
+        \"frank in zone\",\n    \"notify_person\": \"person.kathy_snyder\",\n    \"arriving_person\":
+        \"Frank\",\n    \"notify_service\": \"notify.mobile_app_kathy_pixel\"\n  }\n{%
+        elif trigger.entity_id == 'person.kathy_snyder' %}\n  {\n    \"message_tag\":
+        \"kathy in zone\",\n    \"notify_person\": \"person.frank_snyder\",\n    \"arriving_person\":
+        \"Kathy\",\n    \"notify_service\": \"notify.mobile_app_frank_pixel\"\n  }\n{%
+        else %} \n{% endif %}"
+      zone_message: "{% if trigger.id == 'CHS' %}\n  {\n    \"location\": \"Charleston\",\n
+        \   \"message\": \" is at the Charleston International Airport.\"\n  }\n{%
+        elif trigger.id == 'BOS' %}\n  {\n    \"location\": \"Boston\",\n    \"message\":
+        \" is at the Logan International Airport.\"\n  }\n{% elif trigger.id == 'EWR'
+        %}\n  {\n    \"location\": \"Newark\",\n    \"message\": \" is at the Newark
+        International Airport.\"\n  }\n{% elif trigger.id == 'CLT' %}\n  {\n    \"location\":
+        \"Charlotte\",\n    \"message\": \" is at the Charlotte Douglas International
+        Airport.\"\n  }\n{% elif trigger.id == 'PHL' %}\n  {\n    \"location\": \"Philadelphia\",\n
+        \   \"message\": \" is at the Philadelphia International Airport.\"\n  }\n{%
+        elif trigger.id == 'SAV' %}\n  {\n    \"location\": \"Savannah\",\n    \"message\":
+        \" is at the Savannah Hilton Head International Airport.\"\n  }\n{% elif trigger.id
+        == 'PVD' %}\n  {\n    \"location\": \"Providence\",\n    \"message\": \" is
+        at the T.F. Green International Airport.\"\n  }\n{% elif trigger.id == 'LVI'
+        %}\n  {\n    \"location\": \"Allentown\",\n    \"message\": \" is at the Lehigh
+        Valley International Airport.\"\n  }\n{% elif trigger.id == 'DAL' %}\n  {\n
+        \   \"location\": \"Dallas\",\n    \"message\": \" is at the Dallas Love Field
+        Airport.\"\n  }\n{% elif trigger.id == 'HOU' %}\n  {\n    \"location\": \"Houston\",\n
+        \   \"message\": \" is at the Houston William P. Hobby Airport.\"\n  }\n{%
+        else %} \n{% endif %}"
+    alias: 'define variables: Notification section is constant - zone_message entries
+      are added one per trigger '
+  - if:
+    - condition: template
+      value_template: '{{ states(notification.notify_person) != trigger.zone.attributes.friendly_name
+        }}'
+    then:
+    - service: '{{notification.notify_service}}'
+      data:
+        title: '{{notification.arriving_person}} at {{zone_message.location}}'
+        message: '{{notification.arriving_person}} {{zone_message.message}}'
+        data:
+          tag: '{{ notification.message_tag }}'
+    alias: Send notification , based on the zone and person entering it
+  mode: single
+  initial_state: true
+- id: '1670243898551'
+  alias: Turn off closet left on
+  description: If one of the closet lights is left on for some amount of time, turn
+    it off
+  trigger:
+  - platform: state
+    entity_id:
+    - light.upstairs_front_closet
+    - light.upstairs_long_closet
+    - light.top_of_stairs_closet
+    - light.laundry_room
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 15
+      seconds: 0
+  condition: []
+  action:
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id: '{{ trigger.entity_id }}'
+    alias: Turn off the closet light that was left on
+  mode: single
+- id: '1670246977863'
+  alias: Wyze closet sensors control closet light
+  description: The light corresponding to the sensor trigger turns on/off
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.wyzesense_779c0eca
+    - binary_sensor.wyzesense_777a5f8f
+    - binary_sensor.wyzesense_779b18d6
+    alias: When one of closet sensors  changes state
+  condition: []
+  action:
+  - variables:
+      entity: "{% if trigger.entity_id == 'binary_sensor.wyzesense_779c0eca' %}\n
+        \ light.top_of_stairs_closet\n{% elif trigger.entity_id == 'binary_sensor.wyzesense_777a5f8f'
+        %}\n  light.upstairs_long_closet\n{% elif trigger.entity_id == 'binary_sensor.wyzesense_779b18d6'
+        %}\n  light.upstairs_front_closet\n{% endif %}"
+    alias: Set "entity" to be the light that corresponds with the triggering sensor
+  - if:
+    - condition: template
+      value_template: '{{trigger.to_state.state == ''on''}}'
+    then:
+    - service: light.turn_on
+      data: {}
+      target:
+        entity_id: '{{ entity }}'
+    else:
+    - service: light.turn_off
+      data: {}
+      target:
+        entity_id: '{{ entity }}'
+    alias: Turn light on/off based on trigger.to_state
+  mode: single
+- id: '1670260176595'
+  alias: Turn off Guest Bathroom Fans Left on
+  description: If one of the guest bathroom fans is left on for some amount of time,
+    turn it off
+  trigger:
+  - platform: state
+    entity_id:
+    - fan.upstairs_bath_fan
+    - fan.guest_bath_fan
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 30
+      seconds: 0
+  condition: []
+  action:
+  - service: fan.turn_off
+    data: {}
+    target:
+      entity_id: '{{ trigger.entity_id }}'
+    alias: Turn off the guest bathroom fan that was left on
+  mode: single
+- id: '1670433483209'
+  alias: 'Control Above Cabinets Smart Switch '
+  description: Turns tp-link above cabinet switch on or off based on state of lutron
+    above cabinet switch
+  trigger:
+  - platform: state
+    entity_id:
+    - light.kitchen_above_cabinet
+  condition: []
+  action:
+  - if:
+    - condition: template
+      value_template: '{{ trigger.to_state.state == ''on'' }}'
+    then:
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.above_cabinets
+    else:
+    - service: switch.turn_off
+      data: {}
+      target:
+        entity_id: switch.above_cabinets
+  mode: single
+- id: '1670611456268'
+  alias: Toggle Back Porch Fan
+  description: When Back Porch Mantel Pico "favorite" button is pressed, toggle ceiling
+    fan
+  trigger:
+  - platform: device
+    device_id: fb946987ca6b7e8cc4724b2846d2a960
+    domain: lutron_caseta
+    type: press
+    subtype: stop
+  condition: []
+  action:
+  - variables:
+      mantle_state: "{% if state_attr('light.back_porch_mantle','brightness') == None
+        %}\n  off\n{% else %}\n  {{ state_attr('light.back_porch_mantle','brightness')
+        }}\n{% endif %}"
+  - service: system_log.write
+    data:
+      level: error
+      message: "{% if mantle_state == 'off' %}\n  'jerry'\n{% else %}\n  {{ mantle_state
+        }}\n{% endif %}"
+  - service: fan.toggle
+    data: {}
+    target:
+      entity_id: fan.back_porch_ceiling_fan
+  - if:
+    - condition: template
+      value_template: '{{mantle_state == ''off''}}'
+    then:
+    - service: light.turn_off
+      data: {}
+      target:
+        device_id: 3b88ac3efc0c811e8ba25d4c96f250d5
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 5
+        milliseconds: 0
+    - service: light.turn_off
+      data: {}
+      target:
+        device_id: 3b88ac3efc0c811e8ba25d4c96f250d5
+    else:
+    - service: light.turn_on
+      data:
+        brightness: '{{ mantle_state }}'
+      target:
+        entity_id: light.back_porch_mantle
+    - delay:
+        hours: 0
+        minutes: 0
+        seconds: 5
+        milliseconds: 0
+    - service: light.turn_on
+      data:
+        brightness: '{{ mantle_state }}'
+      target:
+        entity_id: light.back_porch_mantle
+  mode: single
+- id: '1670620431020'
+  alias: Great Room Steps Pico  Hangout
+  description: Great Room Steps Pico activates the hangout scene
+  trigger:
+  - platform: device
+    device_id: bb1240bc4bbc5494fcba706c315b0ed3
+    domain: lutron_caseta
+    type: press
+    subtype: stop
+  condition: []
+  action:
+  - service: scene.turn_on
+    data:
+      transition: 15
+    target:
+      entity_id: scene.hangout
+  mode: single
+- id: '1670634449504'
+  alias: Pico Activates Kitchen Cooking
+  description: ''
+  trigger:
+  - platform: device
+    device_id: 7f978f70d1e8be2cee9501a1599b7702
+    domain: lutron_caseta
+    type: press
+    subtype: stop
+  condition: []
+  action:
+  - service: scene.turn_on
+    data:
+      transition: 5
+    target:
+      entity_id: scene.kitchen_cooking
+  mode: single

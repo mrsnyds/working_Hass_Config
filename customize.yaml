@@ -1,0 +1,208 @@
+switch.heater_dehumidifier:
+  friendly_name: Heater Dehumidifer
+  icon: mdi:water
+binary_sensor.my_pc_ping:
+  hidden: true
+script.commercial_skip:
+  friendly_name: Skip Commercial
+input_boolean.test_toggle:
+  friendly_name: Morning Heat On
+  icon: mdi:thermometer-lines
+media_player.basement_roku_2: {}
+input_datetime.hum_off:
+  friendly_name: Dehumidifier Time Off
+input_datetime.hum_on:
+  friendly_name: Dehumidifier Time On
+switch.aeon_labs_zw096_smart_switch_6_switch:
+  friendly_name: Coffee AEON
+  node_id: 2
+switch.aeon_coffee:
+  icon: mdi:coffee
+binary_sensor.aeotec_limited_zwa005_trisensor_sensor:
+  node_id: 5
+sensor.aeotec_limited_zwa005_trisensor_temperature:
+  node_id: 5
+sensor.aeotec_limited_zwa005_trisensor_luminance:
+  node_id: 5
+sensor.aeotec_limited_zwa005_trisensor_burglar:
+  node_id: 5
+sensor.aeotec_limited_zwa005_trisensor_alarm_type:
+  node_id: 5
+sensor.aeotec_limited_zwa005_trisensor_alarm_level:
+  node_id: 5
+zwave.aeotec_limited_zwa005_trisensor:
+  node_id: 5
+sensor.aeotec_limited_zwa005_trisensor_sourcenodeid:
+  node_id: 5
+automation.living_room_motion_lights:
+  friendly_name: Living Room Motion
+person.frank_snyder:
+  entity_picture: /local/people/frank3_2.jpg
+person.kathy_snyder:
+  entity_picture: /local/people/kathy.jpg
+person.ellen:
+  entity_picture: ' /local/people/ellen.jpg'
+person.alli:
+  entity_picture: /local/people/alli.jpg
+person.ben:
+  entity_picture: /local/people/ben.jpg
+person.frankie:
+  entity_picture: /local/people/frank4.jpg
+person.jeff_snyder:
+  entity_picture: /local/people/jeff.jpg
+device_tracker.life360_frank_snyder:
+  entity_picture: /local/people/frank3_2.jpg
+device_tracker.frank_pixel:
+  entity_picture: /local/people/frank3_2.jpg
+device_tracker.kathy_pixel:
+  entity_picture: /local/people/kathy.jpg
+light.living_room_candles:
+  icon: mdi:candle
+switch.kathy_night_stand: {}
+light.candles_living_room:
+  icon: mdi:candle
+switch.christmas_tree:
+  icon: mdi:pine-tree
+switch.merry_and_bright:
+  icon: mdi:pine-tree
+switch.kitchen_tree_2:
+  icon: mdi:pine-tree
+switch.merry_and_bright_2:
+  icon: mdi:pine-tree
+switch.kitchen_tree:
+  icon: mdi:pine-tree
+light.dining_room_star:
+  icon: mdi:star
+light.outside_lights:
+  icon: mdi:outdoor-lamp
+light.master_bedroom_lights:
+  icon: mdi:lightbulb-multiple
+light.hallway_guest:
+  icon: mdi:lightbulb-multiple
+light.entryway_lights:
+  icon: mdi:lightbulb-multiple
+light.dining_room_lights:
+  icon: mdi:lightbulb-multiple
+light.living_room_lights:
+  icon: mdi:lightbulb-multiple
+light.family_room_lights:
+  icon: mdi:lightbulb-multiple
+light.kitchen_lights:
+  icon: mdi:lightbulb-multiple
+script.hangout:
+  friendly_name: Hangout
+script.candlelight:
+  icon: mdi:lightbulb-multiple
+scene.candlelight:
+  icon: mdi:lightbulb-multiple
+scene.family_room_hangout:
+  icon: mdi:lightbulb-multiple
+scene.going_to_bed:
+  icon: mdi:lightbulb-multiple
+scene.kathy_going_up:
+  icon: mdi:lightbulb-multiple
+device_tracker.mobile_app_frank:
+  entity_picture: '"/local/people/frank3_2.jpg"'
+device_tracker.mobile_app_kathy:
+  entity_picture: '"/local/people/kathy.jpg"'
+device_tracker.49046bd4_ad05_4ab9_9edf_a57b1033e9e1:
+  friendly_name: frank_phone
+switch.great_room_ceiling_fan:
+  icon: mdi:fan
+switch.master_bathroom_exhaust_fan:
+  icon: mdi:fan
+switch.master_bedroom_ceiling_fan:
+  icon: mdi:fan
+switch.upstairs_ceiling_fan:
+  icon: mdi:fan
+switch.front_porch_ceiling_fan:
+  icon: mdi:fan
+light.christmas_tree:
+  icon: mdi:pine-tree
+light.christmas_lights:
+  icon: mdi:pine-tree
+switch.my_hummer:
+  icon: mdi:fan
+cover.roller_shade:
+  friendly_name: Kitchen Shade
+  device_class: shade
+sensor.habersham_tides_1:
+  icon: mdi:wave
+sensor.habersham_tides_2:
+  icon: mdi:wave
+sensor.habersham_tides_3:
+  icon: mdi:wave
+sensor.habersham_tides_4:
+  icon: mdi:wave
+sensor.habersham_tides_5:
+  icon: mdi:wave
+sensor.habersham_tides_6:
+  icon: mdi:wave
+sensor.habersham_tides_7:
+  icon: mdi:wave
+sensor.habersham_tides_8:
+  icon: mdi:wave
+sensor.habersham_tides_10:
+  icon: mdi:wave
+sensor.habersham_tides_11:
+  icon: mdi:wave
+sensor.habersham_tides_12:
+  icon: mdi:wave
+sensor.habersham_tides_13:
+  icon: mdi:wave
+sensor.habersham_tides_14:
+  icon: mdi:wave
+sensor.habersham_tides_15:
+  icon: mdi:wave
+sensor.habersham_tides_16:
+  icon: mdi:wave
+sensor.habersham_tides_17:
+  icon: mdi:wave
+sensor.habersham_tides_18:
+  icon: mdi:wave
+sensor.habersham_tides_19:
+  icon: mdi:wave
+sensor.habersham_tides_20:
+  icon: mdi:wave
+sensor.habersham_tides_21:
+  icon: mdi:wave
+sensor.habersham_tides_22:
+  icon: mdi:wave
+sensor.habersham_tides_23:
+  icon: mdi:wave
+sensor.habersham_tides_24:
+  icon: mdi:wave
+sensor.habersham_tides_25:
+  icon: mdi:wave
+sensor.habersham_tides_26:
+  icon: mdi:wave
+sensor.habersham_tides_27:
+  icon: mdi:wave
+sensor.habersham_tides_28:
+  icon: mdi:wave
+sensor.habersham_tides_29:
+  icon: mdi:wave
+sensor.habersham_tides_30:
+  icon: mdi:wave
+sensor.habersham_tides_31:
+  icon: mdi:wave
+sensor.habersham_tides_32:
+  icon: mdi:wave
+sensor.habersham_tides_33:
+  icon: mdi:wave
+sensor.habersham_tides_34:
+  icon: mdi:wave
+sensor.habersham_tides_35:
+  icon: mdi:wave
+sensor.habersham_tides_36:
+  icon: mdi:wave
+sensor.habersham_tides_37:
+  icon: mdi:wave
+sensor.habersham_tides_38:
+  icon: mdi:wave
+sensor.habersham_tides_39:
+  icon: mdi:wave
+sensor.habersham_tides_40:
+  icon: mdi:wave
+sensor.habersham_tides_9:
+  icon: mdi:wave

@@ -1,0 +1,45 @@
+# NOAA Tides
+#   Harve Cedars
+- platform: noaa_tides
+  station_id: 8533862
+  name: North Beach
+- platform: noaa_tides
+  station_id: 8533780
+  name: Flat Creek 
+- platform: noaa_tides
+  station_id: 8533738
+  name: Loveladies Harbor
+#   Habersham
+- platform: noaa_tides
+  station_id: TEC3327
+  name: Euhaw Creek
+- platform: noaa_tides
+  station_id: 8667909
+  name: Albergottie Creek
+- platform: noaa_tides
+  station_id: 8668223
+  name: Hwy 170
+
+
+# Time/Date Sensors
+- platform: time_date
+  display_options:
+    - 'time'
+    - 'date'
+    - 'date_time'
+    - 'date_time_iso'
+    - 'time_date'
+    - 'time_utc'
+    - 'beat'
+
+    
+#EPSON Workforce
+- platform: epsonworkforce
+  host: 192.168.1.159
+  monitored_conditions:
+  - black
+  - yellow
+  - magenta
+  - cyan
+  - clean
+  

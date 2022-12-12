@@ -1,0 +1,3 @@
+binary_sensor.zooz_zse40_4_in_1_sensor_sensor:
+  ignored: true
+  polling_intensity: 0

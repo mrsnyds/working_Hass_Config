@@ -1,0 +1,16 @@
+# Wyze Sense custom component https://github.com/kevinvincent/ha-wyzesense
+- platform: wyzesense
+  # device: auto
+  device: "/dev/hidraw0"
+
+# PING Binary Sensors  
+
+- platform: ping
+  name: My PC PING
+  host: 192.168.1.102  
+  count: 2
+  scan_interval: 30 
+  
+
+                    
+                         

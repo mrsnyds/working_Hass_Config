@@ -1,0 +1,19 @@
+# - platform: pushbullet
+  # name: pushbullet
+  # api_key: !secret push_bullet_key
+# - platform: hangouts
+  # name: hangout_notifier
+  # default_conversations:
+    # - id: Ugz_DG8s_6WoV637g1l4AaABAagBxZzMDw
+    # - id: Ugzo_ICgyVEfNSDse9l4AaABAagBnrGgBA
+    # - id: Ugw7aWMpGN9ki28Q_ON4AaABAagBsIriAw   
+- platform: html5
+  name: html_notifier
+  vapid_pub_key: !secret vapid_pub_key
+  vapid_prv_key: !secret vapid_prv_key
+  vapid_email: !secret vapid_email
+- name: Kathy_And_Frank_Pixels
+  platform: group
+  services:
+    - service: mobile_app_frank_pixel
+    - service: mobile_app_kathy_pixel  

@@ -1,0 +1,322 @@
+# WillWeather Tides Forecasts
+- scan_interval: 14400
+  resource_template: https://api.willyweather.com/v2/MGRkOGZhNGQyNjllNzc5ZTE5YjM3Zj/locations/211344/weather.json?forecasts=tides&days=10&startDate={{ states('sensor.date') }}
+  sensor:          
+    - name: Habersham Tides 1
+      json_attributes_path: "$.forecasts.tides.days[0].entries[0]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[0].entries[0].type }}: {{ value_json.forecasts.tides.days[0].entries[0].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"          
+    - name: Habersham Tides 2
+      json_attributes_path: "$.forecasts.tides.days[0].entries[1]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[0].entries[1].type }}: {{ value_json.forecasts.tides.days[0].entries[1].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"          
+
+    - name: Habersham Tides 3
+      json_attributes_path: "$.forecasts.tides.days[0].entries[2]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[0].entries[2].type }}: {{ value_json.forecasts.tides.days[0].entries[2].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 4
+      json_attributes_path: "$.forecasts.tides.days[0].entries[3]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[0].entries[3].type }}: {{ value_json.forecasts.tides.days[0].entries[3].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 5
+      json_attributes_path: "$.forecasts.tides.days[1].entries[0]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[1].entries[0].type }}: {{ value_json.forecasts.tides.days[1].entries[0].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 6
+      json_attributes_path: "$.forecasts.tides.days[1].entries[1]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[1].entries[1].type }}: {{ value_json.forecasts.tides.days[1].entries[1].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+      
+    - name: Habersham Tides 7
+      json_attributes_path: "$.forecasts.tides.days[1].entries[2]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[1].entries[2].type }}: {{ value_json.forecasts.tides.days[1].entries[2].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 8
+      json_attributes_path: "$.forecasts.tides.days[1].entries[3]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[1].entries[3].type }}: {{ value_json.forecasts.tides.days[1].entries[3].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+            
+    - name: Habersham Tides 9
+      json_attributes_path: "$.forecasts.tides.days[2].entries[0]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[2].entries[0].type }}: {{ value_json.forecasts.tides.days[2].entries[0].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 10
+      json_attributes_path: "$.forecasts.tides.days[2].entries[1]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[2].entries[1].type }}: {{ value_json.forecasts.tides.days[2].entries[1].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+      
+    - name: Habersham Tides 11
+      json_attributes_path: "$.forecasts.tides.days[2].entries[2]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[2].entries[2].type }}: {{ value_json.forecasts.tides.days[2].entries[2].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 12
+      json_attributes_path: "$.forecasts.tides.days[2].entries[3]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[2].entries[3].type }}: {{ value_json.forecasts.tides.days[2].entries[3].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"            
+      
+    - name: Habersham Tides 13
+      json_attributes_path: "$.forecasts.tides.days[3].entries[0]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[3].entries[0].type }}: {{ value_json.forecasts.tides.days[3].entries[0].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 14
+      json_attributes_path: "$.forecasts.tides.days[3].entries[1]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[3].entries[1].type }}: {{ value_json.forecasts.tides.days[3].entries[1].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+      
+    - name: Habersham Tides 15
+      json_attributes_path: "$.forecasts.tides.days[3].entries[2]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[3].entries[2].type }}: {{ value_json.forecasts.tides.days[3].entries[2].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 16
+      json_attributes_path: "$.forecasts.tides.days[3].entries[3]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[3].entries[3].type }}: {{ value_json.forecasts.tides.days[3].entries[3].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"      
+      
+    - name: Habersham Tides 17
+      json_attributes_path: "$.forecasts.tides.days[4].entries[0]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[4].entries[0].type }}: {{ value_json.forecasts.tides.days[4].entries[0].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 18
+      json_attributes_path: "$.forecasts.tides.days[4].entries[1]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[4].entries[1].type }}: {{ value_json.forecasts.tides.days[4].entries[1].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+      
+    - name: Habersham Tides 19
+      json_attributes_path: "$.forecasts.tides.days[4].entries[2]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[4].entries[2].type }}: {{ value_json.forecasts.tides.days[4].entries[2].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 20
+      json_attributes_path: "$.forecasts.tides.days[4].entries[3]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[4].entries[3].type }}: {{ value_json.forecasts.tides.days[4].entries[3].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"      
+      
+    - name: Habersham Tides 21
+      json_attributes_path: "$.forecasts.tides.days[5].entries[0]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[5].entries[0].type }}: {{ value_json.forecasts.tides.days[5].entries[0].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 22
+      json_attributes_path: "$.forecasts.tides.days[5].entries[1]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[5].entries[1].type }}: {{ value_json.forecasts.tides.days[5].entries[1].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+      
+    - name: Habersham Tides 23
+      json_attributes_path: "$.forecasts.tides.days[5].entries[2]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[5].entries[2].type }}: {{ value_json.forecasts.tides.days[5].entries[2].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 24
+      json_attributes_path: "$.forecasts.tides.days[5].entries[3]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[5].entries[3].type }}: {{ value_json.forecasts.tides.days[5].entries[3].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"      
+      
+    - name: Habersham Tides 25
+      json_attributes_path: "$.forecasts.tides.days[6].entries[0]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[6].entries[0].type }}: {{ value_json.forecasts.tides.days[6].entries[0].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 26
+      json_attributes_path: "$.forecasts.tides.days[6].entries[1]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[6].entries[1].type }}: {{ value_json.forecasts.tides.days[6].entries[1].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+      
+    - name: Habersham Tides 27
+      json_attributes_path: "$.forecasts.tides.days[6].entries[2]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[6].entries[2].type }}: {{ value_json.forecasts.tides.days[6].entries[2].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 28
+      json_attributes_path: "$.forecasts.tides.days[6].entries[3]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[6].entries[3].type }}: {{ value_json.forecasts.tides.days[6].entries[3].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"      
+      
+    - name: Habersham Tides 29
+      json_attributes_path: "$.forecasts.tides.days[7].entries[0]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[7].entries[0].type }}: {{ value_json.forecasts.tides.days[7].entries[0].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 30
+      json_attributes_path: "$.forecasts.tides.days[7].entries[1]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[7].entries[1].type }}: {{ value_json.forecasts.tides.days[7].entries[1].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+      
+    - name: Habersham Tides 31
+      json_attributes_path: "$.forecasts.tides.days[7].entries[2]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[7].entries[2].type }}: {{ value_json.forecasts.tides.days[7].entries[2].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 32
+      json_attributes_path: "$.forecasts.tides.days[7].entries[3]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[7].entries[3].type }}: {{ value_json.forecasts.tides.days[7].entries[3].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"      
+      
+    - name: Habersham Tides 33
+      json_attributes_path: "$.forecasts.tides.days[8].entries[0]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[8].entries[0].type }}: {{ value_json.forecasts.tides.days[8].entries[0].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 34
+      json_attributes_path: "$.forecasts.tides.days[8].entries[1]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[8].entries[1].type }}: {{ value_json.forecasts.tides.days[8].entries[1].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+      
+    - name: Habersham Tides 35
+      json_attributes_path: "$.forecasts.tides.days[8].entries[2]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[8].entries[2].type }}: {{ value_json.forecasts.tides.days[8].entries[2].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 36
+      json_attributes_path: "$.forecasts.tides.days[8].entries[3]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[8].entries[3].type }}: {{ value_json.forecasts.tides.days[8].entries[3].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"      
+      
+    - name: Habersham Tides 37
+      json_attributes_path: "$.forecasts.tides.days[9].entries[0]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[9].entries[0].type }}: {{ value_json.forecasts.tides.days[9].entries[0].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 38
+      json_attributes_path: "$.forecasts.tides.days[9].entries[1]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[9].entries[1].type }}: {{ value_json.forecasts.tides.days[9].entries[1].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+      
+    - name: Habersham Tides 39
+      json_attributes_path: "$.forecasts.tides.days[9].entries[2]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[9].entries[2].type }}: {{ value_json.forecasts.tides.days[9].entries[2].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"
+
+    - name: Habersham Tides 40
+      json_attributes_path: "$.forecasts.tides.days[9].entries[3]" 
+      json_attributes:
+        - dateTime
+        - height
+        - type
+      value_template: "{{ value_json.forecasts.tides.days[9].entries[3].type }}: {{ value_json.forecasts.tides.days[9].entries[3].dateTime|as_timestamp|timestamp_custom('%I:%M %p') }}"      

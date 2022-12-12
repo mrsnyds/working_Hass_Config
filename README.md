@@ -1,0 +1,1 @@
+This is my HASSIO config.  My first repo', where I am first learning about GIT, and many other new things that have come up since finding the the Home Assistant rabbit hole.

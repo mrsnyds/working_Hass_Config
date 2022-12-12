@@ -1,0 +1,10 @@
+#Linksys Device Tracker
+- platform: linksys_smart
+  host: 192.168.1.1
+  new_device_defaults:
+    track_new_devices: False
+##Google Maps GPS tracker      
+# - platform: google_maps
+  # username: !secret gMapsUser
+  # scan_interval: 60
+

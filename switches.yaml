@@ -1,0 +1,217 @@
+- platform: command_line
+  switches:   
+    aeotec_zstick_disco_light: 
+      friendly_name: 'Aeotec Z-Stick Disco Light' 
+      command_on: 'echo -e -n "\x01\x08\x00\xF2\x51\x01\x01\x05\x01\x50" > /dev/serial/by-id/usb-0658_0200-if00'  
+      command_off: 'echo -e -n "\x01\x08\x00\xF2\x51\x01\x00\x05\x01\x51" > /dev/serial/by-id/usb-0658_0200-if00'  
+- platform: template
+  switches:
+
+   # SCHLAGE Back Door Lock
+   # * this switch is needed for Garmin IQ group
+    back_door_lock:
+      value_template: "{{ is_state('lock.schlage_back_door', 'locked') }}"
+      unique_id: schlage_back_lk
+      turn_on:
+      - service: lock.lock
+        target:
+          entity_id: lock.schlage_back_door
+      turn_off:
+      - service: lock.unlock
+        target:
+          entity_id: lock.schlage_back_door  
+   # AUGUST Fron Door Lock
+   # * this switch is needed for Garmin IQ group
+    front_door_lock:
+      value_template: "{{ is_state('lock.august_front_door', 'locked') }}"
+      unique_id: august_front_lk
+      turn_on:
+      - service: lock.lock
+        target:
+          entity_id: lock.august_front_door
+      turn_off:
+      - service: lock.unlock
+        target:
+          entity_id: lock.august_front_door          
+          
+     # Pause/Resume SONY TV     
+    pause_sony_tv:
+      value_template: "{{ states('media_player.family_room') != 'playing' }}"
+      friendly_name: Pause Sony TV
+      unique_id: sony_pause_id
+      turn_on:        
+      - service: media_player.media_play_pause         
+        target:
+          entity_id: media_player.sony_bravia_tv
+      turn_off:
+      - service: media_player.media_play_pause         
+        target:
+          entity_id: media_player.sony_bravia_tv      
+      icon_template: mdi:motion-pause-outline 
+
+     # template switch for Sharp Roku   
+    upstairs_tv:
+      value_template: "{{ is_state('remote.sharp_roku', 'on') }}"
+      friendly_name: Upstairs TV
+      unique_id: sharp_roku_id      
+      turn_on:        
+      - service: remote.turn_on     
+        target:
+          entity_id: remote.sharp_roku
+      turn_off:
+      - service: remote.turn_off     
+        target:
+          entity_id: remote.sharp_roku       
+
+# source_list:
+  # - Home
+  # - Disney Plus
+  # - HBO GO
+  # - HBO NOW
+  # - Netflix
+  # - Plex Preview
+  # - Sling TV
+  # - YouTube
+  # - YouTube TV
+
+    # SONY TV HBO Max
+    sony_hbo_max:
+      value_template: "{{  state_attr('media_player.sony_bravia_cast','app_name')  == 'HBO Max'}} "
+      friendly_name: Sony HBO Max
+      turn_on:
+      - service: media_player.select_source
+        target:
+          entity_id: media_player.sony_bravia_tv
+        data:
+          source: HBO Max
+      turn_off:
+      - service: media_player.turn_off
+        target: 
+          entity_id: media_player.sony_bravia_tv        
+      icon_template: mdi:television  
+
+  # SONY TV Disney+
+    sony_disney_plus:
+      value_template: "{{  state_attr('media_player.sony_bravia_cast','app_name')  == 'Disney+'}} "
+      friendly_name: Sony Disney Plus
+      turn_on:
+      - service: media_player.select_source
+        target:
+          entity_id: media_player.sony_bravia_tv
+        data:
+          source: Disney+
+      - delay: "00:00:03"          
+      - service: remote.send_command
+        target:
+          entity_id: remote.sony_bravia_tv
+        data:
+          command: Confirm          
+      turn_off:
+      - service: media_player.turn_off
+        target: 
+          entity_id: media_player.sony_bravia_tv        
+      icon_template: mdi:television   
+  
+    # SONY TV Paramount+
+    sony_paramount_plus:
+      value_template: "{{  state_attr('media_player.sony_bravia_cast','app_name')  == 'Paramount+'}} "
+      friendly_name: Sony Paramount Plus
+      turn_on:
+      - service: media_player.select_source
+        target:
+          entity_id: media_player.sony_bravia_tv
+        data:
+          source: Paramount+
+      turn_off:
+      - service: media_player.turn_off
+        target: 
+          entity_id: media_player.sony_bravia_tv        
+      icon_template: mdi:television 
+        
+    # SONY TV PRIME
+    sony_prime:
+      value_template: "{{  state_attr('media_player.sony_bravia_cast','app_name')  == 'Prime Video'}} "
+      friendly_name: Sony Prime Video
+      turn_on:
+      - service: media_player.select_source
+        target:
+          entity_id: media_player.sony_bravia_tv
+        data:
+          source: Prime Video
+      - delay: "00:00:03"          
+      - service: remote.send_command
+        target:
+          entity_id: remote.sony_bravia_tv
+        data:
+          command: Confirm          
+      turn_off:
+      - service: media_player.turn_off
+        target: 
+          entity_id: media_player.sony_bravia_tv        
+      icon_template: mdi:television 
+      
+     # SONY TV PLEX
+    sony_plex:
+      value_template: "{{  state_attr('media_player.sony_bravia_cast','app_name')  == 'Plex'}} "
+      friendly_name: Sony PLEX
+      turn_on:
+      - service: media_player.select_source
+        target:
+          entity_id: media_player.sony_bravia_tv
+        data:
+          source: Plex
+      turn_off:
+      - service: media_player.turn_off
+        target: 
+          entity_id: media_player.sony_bravia_tv        
+      icon_template: mdi:television
+      
+     # SONY TV NETFLIX
+    sony_netflix:
+      value_template: "{{  state_attr('media_player.sony_bravia_cast','app_name')  == 'Netflix'}}"
+      friendly_name: Sony Netflix
+      turn_on:
+      - service: media_player.select_source
+        target:
+          entity_id: media_player.sony_bravia_tv
+        data:
+          source: Netflix              
+      turn_off:
+      - service: media_player.turn_off
+        target: 
+          entity_id: media_player.sony_bravia_tv        
+      icon_template: mdi:television
+
+     # SONY TV YOUTUBE
+    sony_youtube:
+      value_template: "{{  state_attr('media_player.sony_bravia_cast','app_name')  == 'YouTube'}} "
+      friendly_name: Sony YouTube
+      turn_on:
+      - service: media_player.select_source
+        target:
+          entity_id: media_player.sony_bravia_tv
+        data:
+          source: YouTube
+      turn_off:
+      - service: media_player.turn_off
+        target: 
+          entity_id: media_player.sony_bravia_tv        
+      icon_template: mdi:television
+
+     # SONY TV YOUTUBE TV      
+    sony_youtubetv:
+      value_template: "{{  state_attr('media_player.sony_bravia_cast','app_name')  == 'YouTube TV'}} "
+      friendly_name: Sony YouTube TV
+      turn_on:
+      - service: media_player.select_source
+        target:
+          entity_id: media_player.sony_bravia_tv
+        data:
+          source: YouTube TV
+      turn_off:
+      - service: media_player.turn_off
+        target: 
+          entity_id: media_player.sony_bravia_tv        
+      icon_template: mdi:television      
+      
+ 

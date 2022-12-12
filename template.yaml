@@ -1,0 +1,87 @@
+# Carport Wyze Cam v2
+- trigger:
+    - platform: webhook
+      webhook_id: 9CAA2BA12E56F242D34B3BEC199396E9F4EC7751DF5F5EDE85DF75C482CRPT
+- sensor:
+    - name: Date Tomorrow
+      state: >
+        {{ ((strptime(states('sensor.date'),'%Y-%m-%d')|as_timestamp + 86400)|timestamp_local)[:10] }}    
+    - name: solar_angle
+      unit_of_measurement: "°"      
+      state: "{{ '%+.1f'|format(state_attr('sun.sun', 'elevation')) }}"  
+   # EPSON Ink Level Sensors 
+    - name: very_low_ink
+      state: > 
+        {%set low_ink = ['1','2','3','4'] %}
+        {%- if   
+          states('sensor.epson_xp_440_series_black_ink') in low_ink or
+          states('sensor.epson_xp_440_series_yellow_ink') in low_ink or
+          states('sensor.epson_xp_440_series_magenta_ink') in low_ink or
+          states('sensor.epson_xp_440_series_cyan_ink') in low_ink 
+        %}
+          on
+        {%- else -%}
+          off
+        {%- endif -%}        
+    - name: yellow_ink_reminder_email
+      state: > 
+        {%- if (states.input_boolean.yellow_ink_reminder.state == "on")
+            and (states.sensor.ink_level_yellow.state|int < 10) -%}
+          on
+        {%- else -%}
+          off
+        {%- endif -%} 
+    - name: magenta_ink_reminder_email
+      state: > 
+        {%- if (states.input_boolean.magenta_ink_reminder.state == "on")
+            and (states.sensor.ink_level_magenta.state|int < 10) -%}
+          on
+        {%- else -%}
+          off
+        {%- endif -%}          
+    - name: cyan_ink_reminder_email
+      state: > 
+        {%- if (states.input_boolean.cyan_ink_reminder.state == "on")
+            and (states.sensor.ink_level_cyan.state|int < 10) -%}
+          on
+        {%- else -%}
+          off
+        {%- endif -%}                
+    - name: black_ink_reminder_email
+      state: > 
+        {%- if (states.input_boolean.black_ink_reminder.state == "on")
+            and (states.sensor.ink_level_black.state|int < 10) -%}
+          on
+        {%- else -%}
+          off
+        {%- endif -%}        
+  binary_sensor:
+    - name: set_away_climate
+      state: "{{ (distance('person.frank_snyder') > 15) and (distance('person.kathy_snyder') > 15) }}"
+      
+    - name: Shower Motion
+      device_class: motion
+      unique_id: shwr_mtn_zooz
+      state: >-
+        {{ is_state('sensor.zooz_zse40_4_in_1_sensor_burglar','8') }}     
+        
+    # - name: Closet Motion
+      # unique_id: cls_mot
+      # device_class: motion
+      # state: >-
+        # {{((is_state('binary_sensor.wyzesense_779b2dd4','on')) 
+              # or (is_state('binary_sensor.wyzesense_779b241a','on')))}}   
+              
+              
+    # - name: Bathroom Area Motion
+      # unique_id: bath_mtn
+      # device_class: motion
+      # state: >-
+        # {{((is_state('binary_sensor.closet_motion','on')) 
+              # or (is_state('binary_sensor.wyzesense_779d4ba0','on'))
+              # or (is_state('sensor.zooz_zse40_4_in_1_sensor_burglar','8')))}}               
+           
+             
+                      
+                   
+

@@ -1,0 +1,815 @@
+all_gone_not_random:
+  alias: All Gone Not Random
+  description: In the time frame is NOT between sunset and 23:00 (when random lights
+    are on), turn off all the lights except sunset exterior lights and Christmas lights
+  sequence:
+  - condition: state
+    entity_id: input_boolean.guest_mode
+    state: 'off'
+  - service: light.turn_off
+    target:
+      entity_id: "{% set lights_on = states.light | selectattr('state','eq', 'on')|
+        map(attribute='entity_id') | list  %} {%- for entity_id in lights_on \n  if
+        (state_attr(entity_id, 'browserID') == None) and\n  (state_attr(entity_id,'entity_id')
+        == None) and\n  (entity_id not in (state_attr('light.sunset_exterior','entity_id')))
+        and\n  (entity_id not in (state_attr('light.christmas_lights','entity_id')))-%}
+        \n  {%- if loop.last -%}\n    {{entity_id}}\n  {%-  else -%}\n    {{entity_id}}{{',
+        '}}\n  {%- endif -%}\n{%- endfor -%}"
+  mode: single
+all_gone_random:
+  alias: All Gone Random
+  description: In the time frame between sunset and 23:00 (when random lights are
+    on), turn off all the lights except members of light.random_lights,  light.sunset_exterior,
+    and light.christmas_lights
+  sequence:
+  - condition: state
+    entity_id: input_boolean.guest_mode
+    state: 'off'
+  - service: light.turn_off
+    data:
+      entity_id: "{% set lights_on = states.light | selectattr('state','eq', 'on')
+        | map(attribute='entity_id') | list  %} {%- for entity_id in lights_on \n
+        \ if (state_attr(entity_id, 'browserID') == None) and \n  (state_attr(entity_id,'entity_id')
+        == None) and\n  (entity_id not in state_attr('light.random_lights','entity_id'))
+        and\n  (entity_id not in (state_attr('light.sunset_exterior','entity_id')))
+        and\n  (entity_id not in (state_attr('light.christmas_lights','entity_id')))-%}
+        \n  {%- if loop.last -%}\n    {{entity_id}}\n  {%-  else -%}\n    {{entity_id}}{{',
+        '}}\n  {%- endif -%}\n{%- endfor -%}"
+  mode: single
+disable_vanity_closet:
+  alias: Temporary Closet Vanity Motion Bypass
+  mode: restart
+  sequence:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{  (states(''light.master_bathroom_vanity_lights'') == ''off'')
+          and (states(''light.master_closet_lights'') == ''off'')}}'
+      sequence:
+      - service: automation.turn_off
+        target:
+          entity_id: automation.wyze_motion_controls_bathroom_vanity, automation.wyze_motion_controls_closet_light
+      - delay: 00:10:00
+      - service: automation.turn_on
+        target:
+          entity_id: automation.wyze_motion_controls_bathroom_vanity, automation.wyze_motion_controls_closet_light
+get_out_of_bed:
+  alias: Get Out of Bed
+  sequence:
+  - parallel:
+    - sequence:
+      - service: simplisafe.set_system_properties
+        data:
+          device_id: 096e62cbcc6fadde84038ad6206e6591
+          voice_prompt_volume: 'off'
+      - delay: 10
+      - service: alarm_control_panel.alarm_disarm
+        data:
+          entity_id: alarm_control_panel.1_tomlow_trace_alarm_control_panel
+          code: 1961
+      - delay: 5
+      - service: simplisafe.set_system_properties
+        data:
+          device_id: 096e62cbcc6fadde84038ad6206e6591
+          voice_prompt_volume: low
+      alias: Silently disarm Simplisafe
+    - sequence:
+      - service: light.turn_on
+        data:
+          brightness_pct: 20
+        target:
+          entity_id: light.kitchen_under_cabinet
+      - if:
+        - condition: template
+          value_template: '{{ (((state_attr (''sun.sun'',''next_dawn'')|as_timestamp)
+            - (utcnow()|as_timestamp)) /3600) < 12}}'
+        then:
+        - service: light.turn_on
+          data:
+            brightness_pct: 20
+          target:
+            entity_id: light.great_room_table_lamp
+      - if:
+        - condition: template
+          value_template: '{{  now().hour < 8  }}'
+        then:
+        - service: script.turn_on
+          target:
+            entity_id: script.disable_vanity_closet
+          data: {}
+      alias: Turn on lights
+    - sequence:
+      - service: media_player.unjoin
+        data: {}
+        target:
+          entity_id:
+          - media_player.sonos_upstairs
+          - media_player.sonos_move
+          - media_player.sonos_roam
+          - media_player.sonos_great_room
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: "{{ states ('media_player.sonos_move') == 'unavailable'
+              \n   and states ('media_player.sonos_upstairs') == 'unavailable' }}
+              \          "
+          sequence:
+          - service: media_player.volume_set
+            data:
+              volume_level: 0.11
+            target:
+              entity_id:
+              - media_player.sonos_great_room
+        - conditions:
+          - condition: template
+            value_template: "{{ states ('media_player.sonos_move') == 'unavailable'
+              \n   and states ('media_player.sonos_upstairs') != 'unavailable' }} "
+          sequence:
+          - service: media_player.join
+            data:
+              entity_id: media_player.sonos_great_room
+              group_members:
+              - media_player.sonos_upstairs
+          - service: media_player.volume_set
+            data:
+              volume_level: 0.11
+            target:
+              entity_id:
+              - media_player.sonos_great_room
+              - media_player.sonos_upstairs
+        - conditions:
+          - condition: template
+            value_template: "{{ states ('media_player.sonos_move') != 'unavailable'
+              \n   and (states ('media_player.sonos_upstairs') == 'unavailable' \n
+              \  or states('input_boolean.guest_mode') == 'on') }}"
+          sequence:
+          - service: media_player.join
+            data:
+              entity_id: media_player.sonos_great_room
+              group_members:
+              - media_player.sonos_move
+          - service: media_player.volume_set
+            data:
+              volume_level: 0.11
+            target:
+              entity_id:
+              - media_player.sonos_great_room
+              - media_player.sonos_move
+        default:
+        - service: media_player.join
+          data:
+            entity_id: media_player.sonos_great_room
+            group_members:
+            - media_player.sonos_move
+            - media_player.sonos_upstairs
+        - service: media_player.volume_set
+          data:
+            volume_level: 0.11
+          target:
+            entity_id:
+            - media_player.sonos_great_room
+            - media_player.sonos_move
+            - media_player.sonos_upstairs
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 30
+          milliseconds: 0
+      - variables:
+          random_content: '{{ [''FV:2/36'', ''FV:2/30'', ''FV:2/19'', ''FV:2/32'',
+            ''FV:2/37'', ''FV:2/29''] |random }}'
+      - alias: Play randomly selected Sonos Favorite
+        service: media_player.play_media
+        data:
+          media_content_type: favorite_item_id
+          media_content_id: '{{ random_content }}'
+        target:
+          entity_id: media_player.sonos_great_room
+      - if:
+        - condition: template
+          value_template: '{{ random_content == ''FV:2/32'' or random_content == ''FV:2/37''
+            }}'
+        then:
+        - service: media_player.shuffle_set
+          data:
+            shuffle: true
+          target:
+            entity_id: media_player.sonos_great_room
+      alias: Configure Sonos speakers and select music
+    - sequence:
+      - service: automation.turn_off
+        target:
+          entity_id: automation.wyze_motion_controls_bathroom_vanity, automation.wyze_motion_controls_closet_light
+        data: {}
+      - delay:
+          hours: 0
+          minutes: 10
+          seconds: 0
+          milliseconds: 0
+      - service: automation.turn_on
+        target:
+          entity_id: automation.wyze_motion_controls_bathroom_vanity, automation.wyze_motion_controls_closet_light
+        data: {}
+      alias: Temporarily disable motion lights
+  mode: single
+going_to_bed:
+  description: Sets lighting, locks the doors, and activates alarm (if needed)
+  fields:
+    master:
+      description: Brightness for the master bedroom nightstand
+    vanity:
+      description: Brightness for the master bedroom vanity lights
+  mode: single
+  sequence:
+  - parallel:
+    - sequence:
+      - service: light.turn_on
+        target:
+          entity_id: light.hallway_main_lights
+        data:
+          brightness_pct: 20
+      - service: automation.turn_off
+        target:
+          entity_id: automation.dresser_light
+      - delay: 00:00:01
+      - if: '{{ button_presses == ''single'' }}'
+        then:
+        - service: switch.turn_on
+          target:
+            entity_id: switch.my_hummer
+      - service: light.turn_on
+        target:
+          entity_id: light.master_bedroom_main_lights
+        data:
+          brightness_pct: '{{ master }}'
+      - service: light.turn_on
+        target:
+          entity_id: light.master_bathroom_vanity_lights
+        data:
+          brightness_pct: '{{ vanity }}'
+      - delay: 00:00:01
+      - service: automation.turn_on
+        target:
+          entity_id: automation.dresser_light
+    - service: lock.lock
+      target:
+        entity_id: lock.schlage_back_door
+      data: {}
+    - service: lock.lock
+      target:
+        entity_id: lock.august_front_door
+      data: {}
+    - service: simplisafe.set_system_properties
+      data:
+        device_id: 096e62cbcc6fadde84038ad6206e6591
+        voice_prompt_volume: low
+  - if:
+    - condition: template
+      value_template: '{{(states(''input_boolean.guest_mode'') != ''on'')}}'
+    then:
+    - service: light.turn_off
+      target:
+        entity_id:
+        - light.upstairs
+        - light.guest_bedroom_main_lights
+      data: {}
+    - delay: 00:00:02
+    - service: alarm_control_panel.alarm_arm_home
+      target:
+        entity_id: alarm_control_panel.1_tomlow_trace_alarm_control_panel
+      data:
+        code: 1961
+  alias: Going to Bed
+hangout:
+  alias: Hangout
+  sequence:
+  - service: light.turn_on
+    data:
+      entity_id: light.great_room_main_lights
+      brightness: 28
+  - service: light.turn_on
+    data:
+      entity_id: light.great_room_floor_lamp
+      brightness: 86
+  - service: light.turn_on
+    data:
+      entity_id: light.great_room_table_lamp
+      brightness_pct: 163
+indoor_sunset_lighting:
+  alias: Indoor Sunset Lighting
+  description: Fades lights in, then back down to evening hangout
+  sequence:
+  - condition: template
+    value_template: '{{ state_attr(''sun.sun'',''elevation'') < 12}}'
+  - condition: time
+    after: '12:00:00'
+    before: '21:30:00'
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{states (''light.great_room_main_lights'') == ''off'' and
+          states (''switch.sony_tv'') == ''off''}}'
+      sequence:
+      - service: script.turn_on
+        target:
+          entity_id: script.light_fader
+        data:
+          variables:
+            light: light.great_room_main_lights
+            transition: 00:04:00
+            end_level_pct: 15
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{states (''light.great_room_floor_lamp'') == ''off''}}'
+      sequence:
+      - service: script.turn_on
+        target:
+          entity_id: script.light_fader
+        data:
+          variables:
+            light: light.great_room_floor_lamp
+            transition: 00:04:00
+            end_level_pct: 7
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{states (''light.great_room_table_lamp'') == ''off''}}'
+      sequence:
+      - service: script.turn_on
+        target:
+          entity_id: script.light_fader
+        data:
+          variables:
+            light: light.great_room_table_lamp
+            transition: 00:04:00
+            end_level_pct: 15
+  - delay: 00:05:00
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{states (''light.great_room_main_lights'') == ''on'' and
+          states (''switch.sony_tv'') == ''off''}}'
+      sequence:
+      - service: script.turn_on
+        target:
+          entity_id: script.light_fader
+        data:
+          variables:
+            light: light.great_room_main_lights
+            transition: 00:20:00
+            end_level_pct: 25
+  - service: script.turn_on
+    target:
+      entity_id: script.light_fader
+    data:
+      variables:
+        light: light.great_room_floor_lamp
+        transition: 00:20:00
+        end_level_pct: 20
+  - service: script.turn_on
+    target:
+      entity_id: script.light_fader
+    data:
+      variables:
+        light: light.great_room_table_lamp
+        transition: 00:20:00
+        end_level_pct: 85
+light_fader:
+  description: Fades lights to a desired level over a specified transition period.
+  fields:
+    light:
+      description: Entity_id of light(s) as a list or comma-separated.
+      example: light.kitchen, light.bathroom, light.garage
+    end_level_pct:
+      description: Integer value from 0 to 100 representing the desired final brightness
+        level.
+      example: '80'
+    transition:
+      description: Transition time for fading indicated in HH:MM:SS format (Hours:Minutes:Seconds).
+      example: 00:05:30
+    branch:
+      description: OPTIONAL. If unspecified, default is 'calculate'. 'execute_fade'
+        is reserved for use by the script itself.
+      example: calculate
+  mode: parallel
+  sequence:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ branch is not defined or branch == ''calculate'' }}'
+      sequence:
+      - service: script.turn_on
+        data_template:
+          entity_id: script.light_fader
+          variables:
+            branch: execute_fade
+            light: '{{ light }}'
+            start_level_pct: '{% set b = state_attr(light, ''brightness'') %} {{ 0
+              if b == none else (b/255*100)|round }}'
+            end_level_pct: '{{ end_level_pct|int }}'
+            delay_milli_sec: '{# ============================================================  #}
+              {# start_level_pct MUST BE "0" IF BRIGHTNESS ATTRIBUTE IS "none" #}
+              {# ============================================================  #}
+              {##} {% set b = state_attr(light, ''brightness'') %} {% set start_level_pct
+              = 0 if b == none else (b/255*100)|round %}                   {# ============================================================
+              #} {# End_level_pct IS PROVIDED BY VARIABLE  #} {# ============================================================
+              #} {##} {% set end_level_pct = end_level_pct|int %}  {##} {# ============================================================
+              #} {# DERIVE transition_secs FROM VARIABLE hh:mm:ss #} {# ============================================================
+              #}   {##} {% set t = transition.split('':'') | map(''int'') | list %}
+              {% set transition_secs = t[0]*3600 + t[1]*60 + t[2] %}     {##} {# ============================================================
+              #} {# CALCULATE & RETURN delay_milli_sec  ... min set to 100ms     #}
+              {# ============================================================ #}                     {%
+              set delay_milli_sec = (((transition_secs/(end_level_pct - start_level_pct))|abs)|round(precision=3)*1000)|int
+              %} {{ 100 if delay_milli_sec <= 99 else delay_milli_sec }}'
+            step_pct: '{% set b = state_attr(light, ''brightness'') %} {% set start_level_pct
+              = 0 if b == none else (b/255*100)|round %}                   {{ 1 if
+              start_level_pct < end_level_pct|int else -1 }}
+
+              '
+    - conditions:
+      - condition: template
+        value_template: '{{ branch is defined and branch == ''execute_fade'' }}'
+      sequence:
+      - repeat:
+          while:
+          - condition: template
+            value_template: '{{ repeat.index <= 102 }}'
+          - condition: template
+            value_template: "{% set b = state_attr(light, 'brightness') %}  {% set
+              b = (b/255*100)|round if b != none else b %}  {% if b == none -%}\n
+              \ {{ step_pct|int != -1 }}\n{%- elif b > end_level_pct|int -%} \n  {{
+              step_pct|int == -1 }}                       \n{%- else -%}\n  {{ b <
+              end_level_pct|int }} \n{%- endif %}"
+          - condition: template
+            value_template: '{% set b = state_attr(light, ''brightness'') %}  {% set
+              b = (b/255*100)|round if b != none else 0 %}  {{ b == start_level_pct|int
+              + ((repeat.index - 1) * (step_pct|int)) }}  '
+          sequence:
+          - service: light.turn_on
+            data_template:
+              entity_id: '{{ light }} '
+              brightness_pct: '{% set x = start_level_pct|int + (repeat.index|int
+                * step_pct|int) %} {{ ([0, x, 100]|sort)[1] }}'
+          - delay:
+              milliseconds: '{{ delay_milli_sec|int }}'
+  alias: ''
+  max: 10
+random_lights_execute:
+  alias: Random Lights Execute
+  description: 'Two execution branches: (1) turn light on, (2) select next light'
+  fields:
+    current_light:
+      description: Entity_id of the light to turn on, and later compare to the next_light
+        selection.
+      example: light.kitchen
+    branch:
+      description: A value to direct flow to the necessary execution sequence.
+      example: light_on or select_light
+  mode: parallel
+  sequence:
+  - variables:
+      random_lights: '{{ state_attr(''light.random_lights'',''entity_id'')|list }}'
+      script_current: "{% if current_light is undefined %}\n  {{ random_lights[(range(0,
+        (random_lights|count)) | random | int)] }}\n{% else %}\n  {{ current_light
+        }}\n{% endif %}        "
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{ branch is undefined or branch == ''light_on'' }}'
+      sequence:
+      - variables:
+          light_on_minutes: 00:{{ range(10,50) | random | int }}:00
+          next_light_overlap: 00:0{{ range(1,9) | random | int }}:00
+      - service: light.turn_on
+        data:
+          entity_id: '{{ script_current }}'
+          brightness_pct: 40
+      - service: system_log.write
+        data:
+          level: info
+          message: 'turned on: {{ script_current }}, for: {{ light_on_minutes }} min.'
+      - delay: '{{ light_on_minutes }}'
+      - condition: state
+        entity_id: group.home
+        state: not_home
+      - condition: template
+        value_template: '{{ now().hour | int < 23 }}'
+      - service: script.turn_on
+        data:
+          entity_id: script.random_lights_execute
+          variables:
+            current_light: '{{ script_current }}'
+            branch: select_light
+      - delay: '{{ next_light_overlap }}'
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{ (states(''group.home'') != ''home'' and now().hour
+              | int < 23) }}'
+          sequence:
+          - service: light.turn_off
+            data:
+              entity_id: '{{ script_current }}'
+    - conditions:
+      - condition: template
+        value_template: '{{ branch is defined and branch == ''select_light'' }}'
+      sequence:
+      - variables:
+          random_lights: '{{ state_attr(''light.random_lights'',''entity_id'')|list
+            }}'
+          next_light: '{{ random_lights[(range(0, (random_lights|count)) | random
+            | int)] }}'
+          valid_selection: '{{ script_current != next_light }}'
+      - service: script.turn_on
+        data:
+          entity_id: script.random_lights_execute
+          variables:
+            current_light: '{% if valid_selection %} {{next_light}} {% else %} {{script_current}}
+              {% endif %}'
+            branch: '{% if valid_selection %} light_on {% else %} select_light {%
+              endif %} '
+restart_home_assistant:
+  alias: Restart Home Assistant
+  sequence:
+  - service: homeassistant.restart
+pause_roku:
+  alias: Pause Roku
+  sequence:
+  - data:
+      entity_id: media_player.family_room
+    service: media_player.media_play_pause
+resume_roku:
+  alias: Resume Roku
+  sequence:
+  - data:
+      entity_id: media_player.family_room
+    service: media_player.media_play_pause
+test_phone:
+  alias: Test Phone
+  mode: single
+  variables:
+    entity: sensor.frank_battery_level
+    entity2: sensor.frank_pixel_battery_state
+    battery: '{{states(entity)}}'
+    phone: "{% if 'frank' in entity %}\n Frank's Pixel\n{% else %}\n Kathy's Pixel\n{%
+      endif %}   "
+    title_warning: "{% if battery|int < 9 %}\n VERY Low Battery\n{% else %}\n Low
+      Battery\n{% endif %}"
+    message_tag: "{% if 'frank' in entity %}\n frank phone low\n{% else %}\n kathy
+      phone low\n{% endif %} "
+  sequence:
+  - condition:
+    - condition: template
+      value_template: '{{  is_state(entity2,''discharging'')  }}'
+  - service: notify.mobile_app_frank_pixel
+    data:
+      title: '{{phone}} {{title_warning}}'
+      message: "{% if battery|int < 9 %}        \n  FIND A CHARGER FAST! {{phone[:5]}}'s
+        battery only has {{battery}}% left!\n{% else %}       \n  {{phone[:5]}}'s
+        phone is down to {{battery}}%. Time for a charge ...      \n{% endif %}"
+      data:
+        tag: '{{ message_tag }}'
+aws_button_g030jf059455x3g1:
+  alias: AWS Button G030JF059455X3G1
+  description: Select a sequence of actions based on click_type
+  fields:
+    click_type:
+      description: one of SINGLE, DOUBLE, or LONG
+      example: SINGLE
+  sequence:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{click_type == ''single''}}'
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.my_hummer
+        data: {}
+      - service: switch.turn_off
+        target:
+          entity_id: switch.master_bathroom_exhaust_fan
+        data: {}
+      - service: light.turn_off
+        target:
+          entity_id:
+          - light.carport
+          - light.hallway_main_lights
+          - light.master_br
+          - light.master_bedroom_main_lights
+          - light.dresser_light
+        data: {}
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{(states(''input_boolean.guest_mode'') != ''on'')}}'
+          sequence:
+          - service: light.turn_off
+            target:
+              entity_id:
+              - light.great_room
+              - light.great_rm_wall_tbl
+              - light.kitch_and_dining
+              - light.stairs_main_lights
+              - light.carport
+            data: {}
+    - conditions:
+      - condition: template
+        value_template: '{{click_type == ''double''}}'
+      sequence:
+      - service: script.turn_on
+        target:
+          entity_id: script.get_out_of_bed
+        data: {}
+    - conditions:
+      - condition: template
+        value_template: '{{click_type == ''long''}}'
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.my_hummer
+        data: {}
+      - service: switch.turn_off
+        target:
+          entity_id: switch.master_bathroom_exhaust_fan
+        data: {}
+      - service: light.turn_off
+        target:
+          entity_id:
+          - light.carport
+          - light.hallway_main_lights
+          - light.master_br
+          - light.master_bedroom_main_lights
+          - light.dresser_light
+        data: {}
+  mode: single
+aws_button_g030pm046144cswk:
+  alias: AWS Button G030PM046144CSWK
+  sequence:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{click_type == ''single''}}'
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.my_hummer
+        data: {}
+      - service: switch.turn_off
+        target:
+          entity_id: switch.master_bathroom_exhaust_fan
+        data: {}
+      - service: light.turn_off
+        target:
+          entity_id:
+          - light.carport
+          - light.hallway_main_lights
+          - light.master_br
+          - light.master_bedroom_main_lights
+          - light.dresser_light
+        data: {}
+      - choose:
+        - conditions:
+          - condition: template
+            value_template: '{{(states(''input_boolean.guest_mode'') != ''on'')}}'
+          sequence:
+          - service: light.turn_off
+            target:
+              entity_id:
+              - light.great_room
+              - light.great_rm_wall_tbl
+              - light.kitch_and_dining
+              - light.stairs_main_lights
+              - light.carport
+            data: {}
+    - conditions:
+      - condition: template
+        value_template: '{{click_type == ''double''}}'
+      sequence:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.my_hummer
+        data: {}
+      - if:
+        - condition: template
+          value_template: '''armed_'' in states(''alarm_control_panel.1_tomlow_trace_alarm_control_panel'')'
+        then:
+        - service: simplisafe.set_system_properties
+          data:
+            device_id: 096e62cbcc6fadde84038ad6206e6591
+            voice_prompt_volume: 'off'
+        - delay: 10
+        - service: alarm_control_panel.alarm_disarm
+          data:
+            entity_id: alarm_control_panel.1_tomlow_trace_alarm_control_panel
+            code: 1961
+        - delay: 5
+        - service: simplisafe.set_system_properties
+          data:
+            device_id: 096e62cbcc6fadde84038ad6206e6591
+            voice_prompt_volume: low
+    - conditions:
+      - condition: template
+        value_template: '{{click_type == ''long''}}'
+      sequence:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.my_hummer
+        data: {}
+      - service: switch.turn_off
+        target:
+          entity_id: switch.master_bathroom_exhaust_fan
+        data: {}
+      - service: light.turn_off
+        target:
+          entity_id:
+          - light.hallway_main_lights
+          - light.master_br
+          - light.master_bedroom_main_lights
+          - light.dresser_light
+        data: {}
+  description: Select a sequence of actions based on click_type
+  fields:
+    click_type:
+      description: one of SINGLE, DOUBLE, or LONG
+      example: SINGLE
+  mode: single
+aws_button_g030md04734621ka:
+  alias: AWS Button G030MD04734621KA
+  sequence:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: '{{click_type == ''single''}}'
+      sequence:
+      - service: light.turn_on
+        data: {}
+        target:
+          entity_id: light.great_room_floor_lamp
+    - conditions:
+      - condition: template
+        value_template: '{{click_type == ''double''}}'
+      sequence:
+      - service: light.turn_on
+        data: {}
+        target:
+          entity_id: light.great_room_main_lights
+    - conditions:
+      - condition: template
+        value_template: '{{click_type == ''long''}}'
+      sequence:
+      - service: light.turn_on
+        data: {}
+        target:
+          entity_id: light.great_room_table_lamp
+  description: Select a sequence of actions based on click_type
+  fields:
+    click_type:
+      description: one of SINGLE, DOUBLE, or LONG
+      example: SINGLE
+  mode: single
+display_hass_in_kitchen:
+  alias: Cast HASS
+  sequence:
+  - service: cast.show_lovelace_view
+    data:
+      entity_id: media_player.kitchen_display
+      dashboard_path: cast-control
+      view_path: main-cast
+  mode: single
+return_home_lighting:
+  alias: Return Home Lighting
+  sequence:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.indoor_ceiling_fans
+  - after: sunset
+    after_offset: -00:40:00
+    condition: sun
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id: light.random_lights
+  - service: light.turn_on
+    data:
+      brightness_pct: 70
+    target:
+      entity_id: light.kitchen_under_cabinet
+  - service: light.turn_on
+    data:
+      brightness_pct: 50
+    target:
+      entity_id: light.hallway_main_lights
+  - service: light.turn_on
+    data:
+      brightness_pct: 20
+    target:
+      entity_id: light.back_porch_main_lights
+  - delay: 00:05:00
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id: light.back_porch_main_lights
+  mode: single
