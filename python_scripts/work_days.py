@@ -1,5 +1,5 @@
 ##This Python Script Service gets called by an automation triggered
-##by a webhook ID ...
+##by a webhook ID ...  or so it would seem
 ##
 ##    id: aws wrkg_days
 ##    alias: AWS Workign Days Update
