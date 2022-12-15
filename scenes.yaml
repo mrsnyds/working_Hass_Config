@@ -10,24 +10,62 @@
       supported_features: 32
       state: 'off'
     light.great_room_floor_lamp:
+      min_color_temp_kelvin: 2202
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 454
+      effect_list:
+      - Ocean
+      - Romance
+      - Sunset
+      - Party
+      - Fireplace
+      - Cozy
+      - Forest
+      - Pastel Colors
+      - Wake up
+      - Bedtime
+      - Warm White
+      - Daylight
+      - Cool white
+      - Night light
+      - Focus
+      - Relax
+      - True colors
+      - TV time
+      - Plantgrowth
+      - Spring
+      - Summer
+      - Fall
+      - Deepdive
+      - Jungle
+      - Mojito
+      - Club
+      - Christmas
+      - Halloween
+      - Candlelight
+      - Golden white
+      - Pulse
+      - Steampunk
+      - Rhythm
       supported_color_modes:
-      - brightness
-      device_id: '8'
-      zone_id: '4'
-      friendly_name: Great Floor Lamp
-      supported_features: 32
+      - color_temp
+      - rgbw
       color_mode: brightness
-      brightness: 86
+      brightness: 87
+      effect: True colors
+      friendly_name: Great Room Floor Lamp
+      supported_features: 4
       state: 'on'
     light.great_room_table_lamp:
       supported_color_modes:
       - brightness
+      color_mode: brightness
+      brightness: 163
       device_id: '50'
       zone_id: '34'
       friendly_name: Great Tbl Lamp
       supported_features: 32
-      color_mode: brightness
-      brightness: 163
       state: 'on'
     light.kitchen_under_cabinet:
       supported_color_modes:
@@ -39,14 +77,6 @@
       friendly_name: Kitch Under Cabinet
       supported_features: 32
       state: 'on'
-    light.kitchen_above_cabinet:
-      supported_color_modes:
-      - brightness
-      device_id: '27'
-      zone_id: '18'
-      friendly_name: Kitch Above Cabinet
-      supported_features: 32
-      state: 'off'
     light.kitchen_island_lights:
       supported_color_modes:
       - brightness
@@ -79,25 +109,7 @@
       friendly_name: Dining Room
       supported_features: 32
       state: 'off'
-  metadata:
-    light.great_room_floor_lamp:
-      entity_only: false
-    light.kitchen_sink_pendants:
-      entity_only: false
-    light.dining_room_chandelier:
-      entity_only: false
-    light.kitchen_main_lights:
-      entity_only: false
-    light.kitchen_above_cabinet:
-      entity_only: false
-    light.kitchen_under_cabinet:
-      entity_only: false
-    light.kitchen_island_lights:
-      entity_only: false
-    light.great_room_main_lights:
-      entity_only: false
-    light.great_room_table_lamp:
-      entity_only: false
+  metadata: {}
 - id: '1670636111100'
   name: Kitchen Cooking
   entities:

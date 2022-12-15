@@ -1,24 +1,21 @@
-  home:
-    name: Anyone Home
-    entities:
-      - person.frank_snyder
-      - person.kathy_snyder
-      - device_tracker.alexandasiphone_2      
-      - device_tracker.ellendunsiphone
-      - device_tracker.iphone_4
-      - device_tracker.iphone
-      - device_tracker.c7fdf446c7d140d79be5ca770da0a9e6      
-      
-  garmin:
-    name: Garmin
-    entities:
-      - script.get_out_of_bed
-      - script.disable_vanity_closet
-      - light.frank_desk_lamp
-      - switch.back_porch_ceiling_fan
-      - switch.front_porch_ceiling_fan
-      - switch.front_door_lock
-      - switch.back_door_lock
-     
-      
-          
+home:
+  name: Anyone Home
+  entities:
+    - person.frank_snyder
+    - person.kathy_snyder
+    - device_tracker.alexandasiphone_2
+    - device_tracker.ellendunsiphone
+    - device_tracker.iphone_4
+    - device_tracker.iphone
+    - device_tracker.c7fdf446c7d140d79be5ca770da0a9e6
+
+garmin:
+  name: Garmin
+  entities:
+    - script.get_out_of_bed
+    - script.disable_vanity_closet
+    - light.frank_desk_lamp
+    - fan.back_porch_ceiling_fan
+    - fan.front_porch_ceiling_fan
+    - lock.august_front_door
+    - lock.schlage_back_door

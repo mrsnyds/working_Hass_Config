@@ -1637,3 +1637,29 @@
     target:
       entity_id: scene.kitchen_cooking
   mode: single
+- id: '1670966367603'
+  alias: Above Cabinet Lights Sync
+  description: When the "Above Cabinet"  wall switch changes, synch brightness to
+    "Above Cabinet 2"
+  trigger:
+  - platform: state
+    entity_id:
+    - light.kitchen_above_cabinet
+  condition: []
+  action:
+  - if:
+    - condition: template
+      value_template: '{{ trigger.to_state.state  == ''off'' }}'
+    then:
+    - service: light.turn_off
+      data: {}
+      target:
+        entity_id: light.kitchen_above_cabinet_2
+    else:
+    - service: light.turn_on
+      data:
+        brightness: '{{  state_attr(''light.kitchen_above_cabinet'',''brightness'')  }}'
+      target:
+        entity_id: light.kitchen_above_cabinet_2
+    alias: Synch Above Cabinet 2 with changes in Above Cabinet
+  mode: restart
