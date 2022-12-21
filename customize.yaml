@@ -36,20 +36,6 @@ sensor.aeotec_limited_zwa005_trisensor_sourcenodeid:
   node_id: 5
 automation.living_room_motion_lights:
   friendly_name: Living Room Motion
-person.frank_snyder:
-  entity_picture: /local/people/frank3_2.jpg
-person.kathy_snyder:
-  entity_picture: /local/people/kathy.jpg
-person.ellen:
-  entity_picture: ' /local/people/ellen.jpg'
-person.alli:
-  entity_picture: /local/people/alli.jpg
-person.ben:
-  entity_picture: /local/people/ben.jpg
-person.frankie:
-  entity_picture: /local/people/frank4.jpg
-person.jeff_snyder:
-  entity_picture: /local/people/jeff.jpg
 device_tracker.life360_frank_snyder:
   entity_picture: /local/people/frank3_2.jpg
 device_tracker.frank_pixel:

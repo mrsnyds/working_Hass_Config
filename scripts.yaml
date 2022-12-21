@@ -587,9 +587,11 @@ aws_button_g030jf059455x3g1:
         target:
           entity_id: switch.my_hummer
         data: {}
-      - service: switch.turn_off
+      - service: fan.turn_off
         target:
-          entity_id: switch.master_bathroom_exhaust_fan
+          entity_id:
+          - fan.master_bathroom_fan
+          - fan.master_bath_wc_fan
         data: {}
       - service: light.turn_off
         target:
@@ -599,6 +601,7 @@ aws_button_g030jf059455x3g1:
           - light.master_br
           - light.master_bedroom_main_lights
           - light.dresser_light
+          - light.master_bath_wc
         data: {}
       - choose:
         - conditions:
@@ -656,9 +659,11 @@ aws_button_g030pm046144cswk:
         target:
           entity_id: switch.my_hummer
         data: {}
-      - service: switch.turn_off
+      - service: fan.turn_off
         target:
-          entity_id: switch.master_bathroom_exhaust_fan
+          entity_id:
+          - fan.master_bathroom_fan
+          - fan.master_bath_wc_fan
         data: {}
       - service: light.turn_off
         target:
@@ -668,6 +673,7 @@ aws_button_g030pm046144cswk:
           - light.master_br
           - light.master_bedroom_main_lights
           - light.dresser_light
+          - light.master_bath_wc
         data: {}
       - choose:
         - conditions:

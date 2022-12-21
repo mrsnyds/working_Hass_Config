@@ -86,7 +86,7 @@
   action:
   - choose:
     - conditions: "{{ is_state('binary_sensor.4_in_1_sensor_home_security_motion_detection','off')
-        \ \n  and is_state('binary_sensor.4_in_1_sensor_home_security_motion_detection','off')\n}}"
+        \ \n  and is_state('light.master_bath_wc','off')\n}}"
       sequence:
       - service: light.turn_off
         target:
@@ -1499,14 +1499,15 @@
     alias: Turn light on/off based on trigger.to_state
   mode: single
 - id: '1670260176595'
-  alias: Turn off Guest Bathroom Fans Left on
-  description: If one of the guest bathroom fans is left on for some amount of time,
-    turn it off
+  alias: Turn off Bathroom Fans Left on
+  description: If one of the bathroom fans is left on for some amount of time, turn
+    it off
   trigger:
   - platform: state
     entity_id:
     - fan.upstairs_bath_fan
     - fan.guest_bath_fan
+    - fan.master_bath_wc_fan
     to: 'on'
     for:
       hours: 0
@@ -1518,7 +1519,7 @@
     data: {}
     target:
       entity_id: '{{ trigger.entity_id }}'
-    alias: Turn off the guest bathroom fan that was left on
+    alias: Turn off the bathroom fan that was left on
   mode: single
 - id: '1670433483209'
   alias: 'Control Above Cabinets Smart Switch '
@@ -1663,3 +1664,87 @@
         entity_id: light.kitchen_above_cabinet_2
     alias: Synch Above Cabinet 2 with changes in Above Cabinet
   mode: restart
+- id: '1671541872727'
+  alias: No Master Suite Motion
+  description: When no motion in bathroom or closets for 1 hour, turn off lights and
+    WC fan
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.master_suite_motion
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 45
+      seconds: 0
+  condition: []
+  action:
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id:
+      - light.master_bathroom_vanity_lights
+      - light.master_bathroom_shower_lights
+      - light.master_bath_wc
+      - light.master_closet_lights
+  - service: fan.turn_off
+    data: {}
+    target:
+      entity_id: fan.master_bath_wc_fan
+  mode: single
+- id: '1671559594035'
+  alias: Turn off Master WC Light
+  description: If light has been off for 10 minutes, check if Master Suite Motion
+    is also off and turn light off if it has been no motion for a period of time.
+  trigger:
+  - platform: state
+    entity_id:
+    - light.master_bath_wc
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 12
+      seconds: 0
+  condition: []
+  action:
+  - if:
+    - condition: template
+      value_template: "{{\nis_state('binary_sensor.master_suite_motion','off') and\n(now()
+        - states.binary_sensor.master_suite_motion.last_updated) > timedelta(minutes=15)
+        \n}}"
+      alias: Master suite motion off for 15 minutes
+    then:
+    - service: light.turn_off
+      data: {}
+      target:
+        entity_id: light.master_bath_wc
+    else:
+    - alias: Repeat the sequence AS LONG AS the conditions are true
+      repeat:
+        while:
+        - condition: template
+          value_template: '{{ repeat.index <= 10 }}'
+        - condition: template
+          value_template: '{{  states(''light.master_bath_wc'') == ''on''  }}'
+        sequence:
+        - delay:
+            hours: 0
+            minutes: 5
+            seconds: 0
+            milliseconds: 0
+        - if:
+          - condition: template
+            value_template: "{{\nis_state('binary_sensor.master_suite_motion','off')
+              and\n(now() - states.binary_sensor.master_suite_motion.last_updated)
+              > timedelta(minutes=15) \n}}"
+            alias: Master suite motion off for 15 minutes
+          then:
+          - service: light.turn_off
+            data: {}
+            target:
+              entity_id: light.master_bath_wc
+    - service: light.turn_off
+      data: {}
+      target:
+        entity_id: light.master_bath_wc
+  mode: single
