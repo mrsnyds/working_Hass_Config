@@ -351,6 +351,10 @@
       hours: 0
       minutes: 15
       seconds: 0
+  condition:
+  - condition: state
+    entity_id: input_boolean.guest_mode
+    state: 'off'
   action:
   - service: script.turn_on
     data:
@@ -582,6 +586,7 @@
             button_presses: single
             master: 20
             vanity: 10
+            wc: 8
       key_pressed_2x:
       - service: script.turn_on
         target:
@@ -591,6 +596,7 @@
             button_presses: double
             master: 6
             vanity: 3
+            wc: 3
       key_held_down:
       - service: scene.turn_on
         data:

@@ -247,6 +247,11 @@ going_to_bed:
           entity_id: light.master_bathroom_vanity_lights
         data:
           brightness_pct: '{{ vanity }}'
+      - service: light.turn_on
+        target:
+          entity_id: light.master_bathroom_vanity_lights
+        data:
+          brightness_pct: '{{ vanity }}'
       - delay: 00:00:01
       - service: automation.turn_on
         target:
@@ -334,6 +339,22 @@ indoor_sunset_lighting:
   - choose:
     - conditions:
       - condition: template
+        value_template: '{{states (''light.kitchen_above_cabinet'') == ''off''}}'
+      sequence:
+      - parallel:
+        - service: light.turn_on
+          data:
+            transition: 300
+          target:
+            entity_id: light.kitchen_above_cabinet
+        - service: light.turn_on
+          data:
+            transition: 300
+          target:
+            entity_id: light.kitchen_above_cabinet_2
+  - choose:
+    - conditions:
+      - condition: template
         value_template: '{{states (''light.great_room_table_lamp'') == ''off''}}'
       sequence:
       - service: script.turn_on
@@ -375,6 +396,7 @@ indoor_sunset_lighting:
         light: light.great_room_table_lamp
         transition: 00:20:00
         end_level_pct: 85
+  mode: single
 light_fader:
   description: Fades lights to a desired level over a specified transition period.
   fields:
@@ -776,7 +798,7 @@ aws_button_g030md04734621ka:
       example: SINGLE
   mode: single
 display_hass_in_kitchen:
-  alias: Cast HASS
+  alias: Cast Kitchen HASS
   sequence:
   - service: cast.show_lovelace_view
     data:
@@ -784,6 +806,7 @@ display_hass_in_kitchen:
       dashboard_path: cast-control
       view_path: main-cast
   mode: single
+  icon: mdi:cast
 return_home_lighting:
   alias: Return Home Lighting
   sequence:
@@ -819,3 +842,13 @@ return_home_lighting:
     target:
       entity_id: light.back_porch_main_lights
   mode: single
+display_hass_upstairs:
+  alias: Cast Upstairs HASS
+  sequence:
+  - service: cast.show_lovelace_view
+    data:
+      entity_id: media_player.upstairs_display
+      dashboard_path: upstairs-cast-control
+      view_path: main-cast
+  mode: single
+  icon: mdi:cast

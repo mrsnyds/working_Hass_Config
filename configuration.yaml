@@ -57,6 +57,16 @@ template: !include template.yaml
 tts:
   - platform: google_translate
     base_url: https://mrsnyds.duckdns.org:8123 
+    
+# TODOIST
+rest_command:
+  todoist:
+    method: post
+    url: 'https://api.todoist.com/sync/v9/{{ url }}'
+    payload: '{{ payload }}'
+    headers:
+      Authorization: !secret todoist_api_token
+    content_type: 'application/x-www-form-urlencoded'
  
 ## Amazon AWS Components
 aws:

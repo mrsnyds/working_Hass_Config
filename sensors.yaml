@@ -21,6 +21,35 @@
   name: Hwy 170
 
 
+# TODOIST
+- platform: rest
+  name: Home Assistant
+  method: GET
+  resource: 'https://api.todoist.com/sync/v9/projects/get_data'
+  params:
+    project_id: 2200498431
+  headers:
+    Authorization: !secret todoist_api_token
+  value_template: '{{ value_json[''project''][''id''] }}'
+  json_attributes:
+    - project
+    - items
+  scan_interval: 30  
+  
+- platform: rest
+  name: Personal
+  method: GET
+  resource: 'https://api.todoist.com/sync/v9/projects/get_data'
+  params:
+    project_id: 2170688314
+  headers:
+    Authorization: !secret todoist_api_token
+  value_template: '{{ value_json[''project''][''id''] }}'
+  json_attributes:
+    - project
+    - items
+  scan_interval: 30  
+  
 # Time/Date Sensors
 - platform: time_date
   display_options:
